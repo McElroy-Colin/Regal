@@ -1,1 +1,0 @@
-# Parsing folder package label.

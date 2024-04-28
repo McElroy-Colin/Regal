@@ -1,1 +1,0 @@
-# Lexing folder package label.
