@@ -1,4 +1,0 @@
-Lexing
-Parsing
-Testing
-Types
