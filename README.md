@@ -1,4 +1,4 @@
-# B++
+# B++ V0.1
 
 Required non-default packages:
 
