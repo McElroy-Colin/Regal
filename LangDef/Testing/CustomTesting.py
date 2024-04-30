@@ -39,6 +39,7 @@ def test_str(string, tst_lex, tst_parse, tst_eval):
 if (BOOL_TEST):
     outcome = test_str(TEST_STRING, TEST_AGAINST_LEX, TEST_AGAINST_PARSE, TEXT_AGAINST_EVAL)
     print(outcome)
+    
 # Print results instead.
 else:
     token_list = lex_string(TEST_STRING)

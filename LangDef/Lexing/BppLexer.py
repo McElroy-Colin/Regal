@@ -3,6 +3,7 @@ File containing relevant function for lexing a string into syntax tokens for B++
 """
 
 import re
+
 import sys
 sys.path.append('../..')
 from LangDef.Types.BppTypes import *

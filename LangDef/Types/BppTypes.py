@@ -17,7 +17,7 @@ class Let:
         return 'Let'
     
     # Nothing to extract.
-    def extract():
+    def extract(self):
         pass
 
 # Class for keyword 'now'.
@@ -32,7 +32,7 @@ class Now:
         return 'Now'
     
     # Nothing to extract.
-    def extract():
+    def extract(self):
         pass
 
 # Global list of keywords.
@@ -91,7 +91,7 @@ class Nothing:
         return 'Nothing'
     
     # Nothing to extract.
-    def extract():
+    def extract(self):
         pass
 
 
@@ -321,7 +321,7 @@ class Increm:
         return 'Increm'
     
     # Nothing to extract.
-    def extract():
+    def extract(self):
         pass
 
 # Groupers
