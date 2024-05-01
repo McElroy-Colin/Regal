@@ -5,9 +5,9 @@ All functions follow directly from the Context-Free Grammar located in ./BppCFG.
 """
 
 import sys
-sys.path.append('..')
-from Types.BppTypes import *
-from ParseHelpers import *
+sys.path.append('../..')
+from LangDef.Types.BppTypes import *
+from LangDef.Parsing.ParseHelpers import *
 
 def parse_line(tok_lst):
     """Parse a line of code and return a tree containing the order of evaluation.

@@ -1,15 +1,13 @@
-# Currently broken due to import issues.
-
 """
-File to individually test strings for output using the LangDef features.
+File to individually test strings for output using LangDef features.
 """
 
 import sys
-sys.path.append('..')
-from Lexing.BppLexer import *
-from Parsing.BppParser import *
+sys.path.append('../..')
+from LangDef.Lexing.BppLexer import lex_string
+from LangDef.Parsing.BppParser import parse_line
 
-TEST_STRING = "let y = now x = 3 ** 4 - z + (2 * 4) - 4"
+TEST_STRING = "let y = let x = 3 ** 4 - z + (2 * 4) - 4"
 
 BOOL_TEST = False # Test against expected results instead of just printing.
 
@@ -38,10 +36,10 @@ def test_str(string, tst_lex, tst_parse, tst_eval):
         return (token_list == EXPECTED_LEX)
     return None
 
-
 if (BOOL_TEST):
     outcome = test_str(TEST_STRING, TEST_AGAINST_LEX, TEST_AGAINST_PARSE, TEXT_AGAINST_EVAL)
     print(outcome)
+    
 # Print results instead.
 else:
     token_list = lex_string(TEST_STRING)
