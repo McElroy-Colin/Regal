@@ -33,8 +33,8 @@ def parse_let_expr(tok_lst):
     (tok_lst, var_tok) = match_bypass(tok_lst, Var)
     tok_lst = match_bypass(tok_lst, Bind)[0]
     (tok_lst, expr1) = parse_expr(tok_lst)
-    # # LetVar contains a string as the variable's name and the variables valueas an expression.
-    return (tok_lst, LetVar((var_tok.extract(), expr1)))
+    # # LetVar contains a Var as the variable's name and the variables value an expression.
+    return (tok_lst, LetVar((var_tok, expr1)))
 
 def parse_now_expr(tok_lst):
     """Parse a Now Expression as defined in the B++ CFG."""
@@ -42,8 +42,8 @@ def parse_now_expr(tok_lst):
     (tok_lst, var_tok) = match_bypass(tok_lst, Var)
     tok_lst = match_bypass(tok_lst, Bind)[0]
     (tok_lst, expr1) = parse_expr(tok_lst)
-    # NowVar contains a string as the variable's name and the variables valueas an expression.
-    return (tok_lst, NowVar((var_tok.extract(), expr1)))
+    # NowVar contains a Var as the variable's name and the variables value an expression.
+    return (tok_lst, NowVar((var_tok, expr1)))
 
 def parse_expr(tok_lst):
     """Parse an Expression as defined in the B++ CFG."""
