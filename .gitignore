@@ -6,9 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# Custom files
-pusher.ps1
-
 # Distribution / packaging
 .Python
 build/
