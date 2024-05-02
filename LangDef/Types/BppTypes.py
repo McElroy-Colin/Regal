@@ -4,6 +4,7 @@ File containing classes and relevant code for distinguishing token types when co
 
 # Variable storage.
 
+# use mypy (pip install mypy) for compile time type checking : IMPLEMENT
 class VarNode:
 
     def __init__(self, pair, next = None):
@@ -107,7 +108,7 @@ class VarList:
 
 class VarMap:
 
-    var_arr = []
+    var_arr = [None] * 26
 
     def __init__(self):
         pass
@@ -115,11 +116,18 @@ class VarMap:
     def __repr__(self):
         return repr(self.var_arr)
     
+    def _hash(string):
+        if (isinstance(string, str)):
+            return ord(string[0].lower()) - 97
+
     def insert(self, pair):
         if (isinstance(pair, tuple) and (isinstance(pair[0], str)) and (len(pair) == 2)):
-            idx = ord(pair[0][0].lower()) - 97
-            var_lst = self.var_arr[idx]
+            var_lst = self.var_arr[hash(pair[0])]
             var_lst.add(VarNode(pair))
+
+    def lookup(self, name):
+        if (isinstance(name, str)):
+            
 
 
 # Keywords
