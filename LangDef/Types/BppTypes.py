@@ -2,6 +2,125 @@
 File containing classes and relevant code for distinguishing token types when compiling in B++.
 """
 
+# Variable storage.
+
+class VarNode:
+
+    def __init__(self, pair, next = None):
+        if ((isinstance(pair, tuple)) and (len(pair) == 2)):
+            if ((next == None) or (isinstance(next, VarNode))):
+                self.pair = pair
+                self.next = next
+            else:
+                raise TypeError(f"Variable Node instantiated with 'next' value {next}.")
+        else:
+            raise TypeError(f"Variable Node instantiated with {pair}")
+        
+    def __repr__(self):
+        if (self.next == None):
+            return f"N{self.pair}"
+        return f"N{self.pair} -> "
+
+    def attach(self, node):
+        if (isinstance(node, VarNode)):
+            self.next = node
+            return self
+        raise TypeError(f"Tried to attach {self} to {node}.")
+    
+    def extract(self):
+        return self.pair
+    
+    def get_next(self):
+        return self.next
+    
+    def repoint(self, node):
+        if ((isinstance(node, VarNode)) or (node == None)):
+            curr_node = self.get_next()
+            while (curr_node != node):
+                if (curr_node == None):
+                    break
+                temp = curr_node.get_next()
+                curr_node.cleanup()
+                curr_node = temp
+            self.next = node
+        else:
+            raise TypeError(f"Tried to repoint {self} to {node}.")
+        
+    def jump(self):
+        if (self.get_next() != None):
+            self.repoint(self.get_next().get_next())
+            return True
+        return False
+        
+    def cleanup(self):
+        del self.pair
+        del self.next
+
+
+class VarList:
+
+    def __init__(self, head = None):
+        if ((head == None) or (isinstance(head, VarNode))):
+            self.head = head
+        else:
+            raise TypeError(f"Variable List instantiated with {head}")
+
+    def __repr__(self):
+        if (self.head == None):
+            return "||"
+        lst_str = f"{self.head}"
+        curr_node = self.head.get_next()
+        while (curr_node != None):
+            lst_str = lst_str + f"{curr_node}"
+            curr_node = curr_node.get_next()
+        return f"|{lst_str}|"
+    
+    def add(self, node):
+        if (isinstance(node, VarNode)):
+            curr_node = self.head
+            if (curr_node == None):
+                self.head = node
+                return self
+            while (curr_node.get_next() != None):
+                curr_node = curr_node.get_next()
+            curr_node.attach(node)
+            return self
+        else:
+             raise TypeError(f"Cannot add {node} to a Variable List, must be a Variable Node.")
+        
+    def remove(self, key):
+        if (isinstance(key, str)):
+            curr_node = self.head
+            if (curr_node.extract()[0] == key):
+                self.head = curr_node.get_next()
+                curr_node.cleanup()
+                return self
+            while (curr_node.get_next().extract()[0] != key):
+                if (curr_node.get_next().get_next() == None):
+                    return self
+                curr_node = curr_node.get_next()
+            curr_node.jump()
+            return self
+        else:
+            raise TypeError(f"Tried to remove with {key}.")
+
+
+class VarMap:
+
+    var_arr = []
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return repr(self.var_arr)
+    
+    def insert(self, pair):
+        if (isinstance(pair, tuple) and (isinstance(pair[0], str)) and (len(pair) == 2)):
+            idx = ord(pair[0][0].lower()) - 97
+            var_lst = self.var_arr[idx]
+            var_lst.add(VarNode(pair))
+
 
 # Keywords
 

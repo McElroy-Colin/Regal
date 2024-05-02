@@ -3,7 +3,7 @@ File to individually test strings for output using LangDef features.
 """
 
 import sys
-sys.path.append('../..')
+sys.path.append('..')
 from LangDef.Lexing.BppLexer import lex_string
 from LangDef.Parsing.BppParser import parse_line
 
