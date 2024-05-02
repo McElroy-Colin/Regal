@@ -8,4 +8,4 @@ V0.1 Progress:
 - Completed string lexing with a small list of symbols.
 - Parsing accompanied by a custom CFG that parses variable declarations alongside math expressions.
 
-Test code in the LangDef/Testing/CustomTesting module.
+Test code in the Testing/LangDefTesting module.
