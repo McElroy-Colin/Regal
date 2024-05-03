@@ -4,7 +4,7 @@ File containing relevant helper functions for parsing a list of syntax tokens in
 
 import sys
 sys.path.append('../..')
-from LangDef.Types.BppTypes import *
+from LangDefOLD.TypesOLD.BppTypes import *
 
 def check(tok_lst, token, index):
     """Check if token is the element of tok_lst at index.
