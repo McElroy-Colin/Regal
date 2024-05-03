@@ -4,8 +4,8 @@ File to individually test strings for output using LangDef features.
 
 import sys
 sys.path.append('..')
-from LangDef.Lexing.BppLexer import lex_string
-from LangDef.Parsing.BppParser import parse_line
+from LangDefOLD.LexingOLD.BppLexer import lex_string
+from LangDefOLD.ParsingOLD.BppParser import parse_line
 
 TEST_STRING = "let y = let x = 3 ** 4 - z + (2 * 4) - 4"
 
