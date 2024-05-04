@@ -14,25 +14,27 @@ Takes an Integ object (defined in './tokens.h') and returns the dynamically allo
 requires that the returned string be freed by the caller.
 */
 static char* disp_int(Integ integer) {
+    char* int_str;
+
     // Extract integer's value.
     const int num = integer.num;
-
+    // Define the length of extra characters in the Integ object display string.
+    const static int int_label = 5;
     // Calculate the number of digits in the integer.
     const int int_str_size = ((int)(ceil(log10(num)) + 1));
 
-    // Define the length of extra characters in the Integ object display string.
-    const static int int_label = 5;
-
     // Allocate memory for these digits plus the Integ display string.
-    char* int_str = malloc((int_str_size + int_label) * sizeof(char));
+    int_str = malloc((int_str_size + int_label) * sizeof(char));
 
     // Error if memory allocation fails.
     if (int_str == NULL) {
+        char* err_str;
+
         // Define the length of the hard-coded error message.
         const static int err_msg = 29;
 
         // Create an error message including the integer.
-        char* err_str = malloc((int_str_size + err_msg) * sizeof(char));
+        err_str = malloc((int_str_size + err_msg) * sizeof(char));
         sprintf(err_str, "Error allocating memory for %d.", num);
         perror(err_str);
 
@@ -54,7 +56,7 @@ void free_integ(Integ* integ) {
 
 // Free a Vari object (defined in './tokens.h').
 void free_vari(Vari* var) {
-    free((*var).name);
+    free(var->name);
     free(var);
 }
 
@@ -64,25 +66,29 @@ Takes a Vari object (defined in './tokens.h') and returns the dynamically alloca
 requires that the returned string be freed by the caller.
 */
 static char* disp_var(Vari var) {
-    // Extract the variable's value.
-    char* name = var.name;
-
-    // Calculate the size of the Vari's name.
-    const int var_str_size = strlen(name) + 1;
+    char* name, var_str;
 
     // Define the length of extra characters in the Vari object display string.
     const static int var_label = 5;
 
+    // Extract the variable's value.
+    name = var.name;
+
+    // Calculate the size of the Vari's name.
+    const int var_str_size = strlen(name) + 1;
+
     // Allocate memory for the variable name and Vari display string.
-    char* var_str = malloc((var_str_size + var_label) * sizeof(char));
+    var_str = malloc((var_str_size + var_label) * sizeof(char));
 
     // Error if memory allocation fails.
     if (var_str == NULL) {
+        char* err_str;
+
         // Define the length of the hard-coded error message.
         const static int err_msg = 31;
 
         // Create an error message including the name.
-        char* err_str = malloc((var_str_size + err_msg) * sizeof(char));
+        err_str = malloc((var_str_size + err_msg) * sizeof(char));
         sprintf(err_str, "Error allocating memory for \"%s\".", name);
         perror(err_str);
 
