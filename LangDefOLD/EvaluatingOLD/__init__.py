@@ -1,1 +1,0 @@
-# Evaluating folder package label.

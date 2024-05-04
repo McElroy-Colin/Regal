@@ -1,4 +1,4 @@
-// Header file declaring TEMP<Elixir> tokens.
+// Header file declaring Regal tokens.
 
 #ifndef TOKENS_H
 #define TOKENS_H
@@ -13,32 +13,36 @@ typedef struct {
     char* name;
 } Vari;
 
-// Enum for all tokens in TEMP<Elixir>.
+// Enum for all tokens in Regal.
 typedef enum {
     // Keywords
-    Let,
-    Now,
+    Let, Now,
 
     // Primitive data types
     Int,
 
     // Primitive Operators
-    Plus,
-    Minus,
-    Mult,
-    Div,
-    Exp,
+    Plus, Minus, Mult, Div, Exp,
 
     // Variables
     Var,
     Bind,
 
     // Groupers
-    LeftPar,
-    RightPar,
+    LeftPar, RightPar,
 
     // Nothing token
     Nothing
 } Token;
+
+// Enum representing the number of each category of token above.
+const static enum TokenTypeAmt {
+    Keywrds = 2,
+    Prims = 1,
+    PrimOps = 5,
+    Vars = 2,
+    Groupers = 2,
+    Nothings = 1
+};
 
 #endif

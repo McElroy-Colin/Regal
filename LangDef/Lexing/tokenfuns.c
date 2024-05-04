@@ -1,9 +1,12 @@
-// This module contains relevant functions specific to lexing TEMP<Elixir> tokens.
+// This module contains relevant functions specific to lexing Regal tokens.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "tokenfuns.h"
+
+// Functions related to the Integ token object:
 
 /*
 Takes an Integ object (defined in './tokens.h') and returns the dynamically allocated string 
@@ -17,13 +20,19 @@ static char* disp_int(Integ integer) {
     // Calculate the number of digits in the integer.
     const int int_str_size = ((int)(ceil(log10(num)) + 1));
 
-    // Allocate memory for these digits plus the "Int()" characters.
-    char* int_str = malloc((int_str_size + 5) * sizeof(char));
+    // Define the length of extra characters in the Integ object display string.
+    const static int int_label = 5;
+
+    // Allocate memory for these digits plus the Integ display string.
+    char* int_str = malloc((int_str_size + int_label) * sizeof(char));
 
     // Error if memory allocation fails.
     if (int_str == NULL) {
+        // Define the length of the hard-coded error message.
+        const static int err_msg = 29;
+
         // Create an error message including the integer.
-        char* err_str = malloc ((int_str_size + 29) * sizeof(char));
+        char* err_str = malloc((int_str_size + err_msg) * sizeof(char));
         sprintf(err_str, "Error allocating memory for %d.", num);
         perror(err_str);
 
@@ -36,14 +45,22 @@ static char* disp_int(Integ integer) {
     return int_str;
 }
 
-// Free the internal <name> of a Vari object.
-void free_varname(Vari var) {
-    free(var.name);
+// Free an Integ object (defined in './tokens.h').
+void free_integ(Integ* integ) {
+    free(integ);
+}
+
+// Functions related to the Vari token object:
+
+// Free a Vari object (defined in './tokens.h').
+void free_vari(Vari* var) {
+    free((*var).name);
+    free(var);
 }
 
 /*
 Takes a Vari object (defined in './tokens.h') and returns the dynamically allocated string 
-"Vari(<name>)" where <name> is the string value stored in the Vari object. This function 
+"Var(<name>)" where <name> is the string value stored in the Vari object. This function 
 requires that the returned string be freed by the caller.
 */
 static char* disp_var(Vari var) {
@@ -53,13 +70,19 @@ static char* disp_var(Vari var) {
     // Calculate the size of the Vari's name.
     const int var_str_size = strlen(name) + 1;
 
-    // Allocate memory for this name plus the "Var()" characters.
-    char* var_str = malloc((var_str_size + 5) * sizeof(char));
+    // Define the length of extra characters in the Vari object display string.
+    const static int var_label = 5;
+
+    // Allocate memory for the variable name and Vari display string.
+    char* var_str = malloc((var_str_size + var_label) * sizeof(char));
 
     // Error if memory allocation fails.
     if (var_str == NULL) {
+        // Define the length of the hard-coded error message.
+        const static int err_msg = 31;
+
         // Create an error message including the name.
-        char* err_str = malloc((var_str_size + 31) * sizeof(char));
+        char* err_str = malloc((var_str_size + err_msg) * sizeof(char));
         sprintf(err_str, "Error allocating memory for \"%s\".", name);
         perror(err_str);
 
@@ -72,15 +95,19 @@ static char* disp_var(Vari var) {
     return var_str;
 }
 
-// Integers that split tokens into categories in the 'disp_token' below.
-// Categories are labeled in the Token enum in './tokens.h'.
-static enum TokenSiphons {
-    KeywrdSip = 2,
-    PrimSip = KeywrdSip + 1,
-    PrimOpSip = PrimSip + 5,
-    VarSip = PrimOpSip + 2,
-    GroupSip = VarSip + 2,
-    NothingSip = GroupSip + 1
+// General token functions and code:
+
+/*
+Integers that split tokens into categories in the 'disp_token' below.
+Categories are labeled in the Token enum in './tokens.h'.
+*/
+const static enum TokenSiphons {
+    KeywrdSip = Keywrds,
+    PrimSip = KeywrdSip + Prims,
+    PrimOpSip = PrimSip + PrimOps,
+    VarSip = PrimOpSip + Vars,
+    GroupSip = VarSip + Groupers,
+    NothingSip = GroupSip + Nothing
 };
 
 /*
@@ -93,8 +120,10 @@ char* disp_token(Token tok, void* obj) {
     // Assign the Token value as an int.
     const int tok_num = tok;
 
-    // Use the Token Siphons to narrow the Token value into a category. Switch statements 
-    // then return the correct string at each category.
+    /*
+    Use the Token Siphons to narrow the Token value into a category. Switch 
+    statements then return the correct string at each category.
+    */
     if (tok_num >= KeywrdSip) {
         if (tok_num >= PrimSip) {
             if (tok_num >= PrimOpSip) {
