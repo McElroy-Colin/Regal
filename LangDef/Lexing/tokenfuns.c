@@ -1,15 +1,17 @@
+// This module contains relevant functions specific to lexing TEMP<Elixir> tokens.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "tokenfuns.h"
 
 /*
-Takes an Integ object (defined in tokens.h) and returns the dynamically allocated string 
+Takes an Integ object (defined in './tokens.h') and returns the dynamically allocated string 
 "Int(<num>)" where <num> is the int value stored in the Integ object. This function 
 requires that the returned string be freed by the caller.
 */
-char* disp_int(Integ integer) {
-    // extract integer's value.
+static char* disp_int(Integ integer) {
+    // Extract integer's value.
     const int num = integer.num;
 
     // Calculate the number of digits in the integer.
@@ -35,16 +37,16 @@ char* disp_int(Integ integer) {
 }
 
 // Free the internal <name> of a Vari object.
-void free_var(Vari var) {
+void free_varname(Vari var) {
     free(var.name);
 }
 
 /*
-Takes a Vari object (defined in tokens.h) and returns the dynamically allocated string 
+Takes a Vari object (defined in './tokens.h') and returns the dynamically allocated string 
 "Vari(<name>)" where <name> is the string value stored in the Vari object. This function 
 requires that the returned string be freed by the caller.
 */
-char* disp_var(Vari var) {
+static char* disp_var(Vari var) {
     // Extract the variable's value.
     char* name = var.name;
 
@@ -70,21 +72,36 @@ char* disp_var(Vari var) {
     return var_str;
 }
 
+// Integers that split tokens into categories in the 'disp_token' below.
+// Categories are labeled in the Token enum in './tokens.h'.
+static enum TokenSiphons {
+    KeywrdSip = 2,
+    PrimSip = KeywrdSip + 1,
+    PrimOpSip = PrimSip + 5,
+    VarSip = PrimOpSip + 2,
+    GroupSip = VarSip + 2,
+    NothingSip = GroupSip + 1
+};
+
 /*
-Takes a Token value and a pointer to an object and returns the string representation 
-of that token. The object is used for tokens that contain data (e.g. Int(12)). Returned 
-strings that contain this data msut be freed by the caller.
+Takes a Token value (defined in './tokens.h') and a pointer to an object and returns the string 
+representation of that token. The object is used for tokens that contain data (e.g. Int(12)). 
+Returned strings that contain this data must be freed by the caller. Assume that a given token 
+is paired with a pointer to the correct object.
 */
 char* disp_token(Token tok, void* obj) {
     // Assign the Token value as an int.
     const int tok_num = tok;
 
+    // Use the Token Siphons to narrow the Token value into a category. Switch statements 
+    // then return the correct string at each category.
     if (tok_num >= KeywrdSip) {
         if (tok_num >= PrimSip) {
             if (tok_num >= PrimOpSip) {
                 if (tok_num >= VarSip) {
                     if (tok_num >= GroupSip) {
                         if (tok_num >= NothingSip) {
+                            // Token does not fit any category.
                             perror("Not a token.");
                             exit(EXIT_FAILURE);
                         }
@@ -99,6 +116,7 @@ char* disp_token(Token tok, void* obj) {
                     }
                 }
                 switch (tok_num) {
+                    // Use obj to return a dynamically allocated string.
                     case Var: return disp_var(*((Vari*)obj));
                     case Bind: return "Bind";
                     default: 
@@ -117,6 +135,7 @@ char* disp_token(Token tok, void* obj) {
             }
         }
         switch (tok_num) {
+            // Use obj to return a dynamically allocated string.
             case Int: return disp_int(*((Integ*)obj));
             default:
                 perror("Not a primitive type.");

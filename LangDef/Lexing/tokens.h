@@ -1,10 +1,14 @@
+// Header file declaring TEMP<Elixir> tokens.
+
 #ifndef TOKENS_H
 #define TOKENS_H
 
+// Token struct that assigns an integer and stores the integer value.
 typedef struct {
     int num;
 } Integ;
 
+// Token struct that assigns an integer and stores the integer value.
 typedef struct {
     char* name;
 } Vari;
