@@ -4,16 +4,18 @@
 #include <string.h>
 
 // needs to be finished then commented
-void lex_string(char* string) { // include -lregex in gcc compiling
-    regex_t letexpr;
 
-    const int let_ret = regcomp(&letexpr, "\\blet\\b", 0);
+// returns void** eventually
+void lex_string(char *string) { // include -lregex in gcc compiling
+    regex_t regex;
 
-    if (let_ret != 0) {
-        size_t len;
-        char* err_msg, full_err_msg;
+    const int reg_err = regcomp(&regex, "let", 0);
 
-        len = regerror(let_ret, &letexpr, NULL, 0);
+    if (reg_err == 0) {
+        char *err_msg, *full_err_msg;
+
+        const size_t len = regerror(reg_err, &regex, NULL, 0);
+
         err_msg = malloc((len + 1) * sizeof(char));
 
         if (err_msg == NULL) {
@@ -23,8 +25,8 @@ void lex_string(char* string) { // include -lregex in gcc compiling
 
         const static int err_label = 29;
         
-        regerror(let_ret, &letexpr, err_msg, len + 1);
-        full_err_msg = malloc((len + err_label) * sizeof(char));
+        regerror(reg_err, &regex, err_msg, len + 1);
+        full_err_msg = (malloc((len + err_label) * sizeof(char)));
 
         if (full_err_msg == NULL) {
             perror("Memory allocation failed in Regex 'let' full message.");
@@ -38,8 +40,40 @@ void lex_string(char* string) { // include -lregex in gcc compiling
         free(full_err_msg);
         exit(EXIT_FAILURE);
     }
+    regmatch_t *match;
+    const static int match_amt = 1;
 
-    // actually match let_expr here
+    const int let_match = regexec(&regex, string, match_amt, match, 0);
 
-    regfree(&letexpr);
+    if (let_match == REG_ESPACE) {
+        char *err_msg;
+
+        const static int err_label = 53;
+
+        err_msg = malloc((strlen(string) + err_label) * sizeof(char));
+        if (err_msg == NULL) {
+            perror("Memory allocation failed in matching 'let' Regex.");
+            exit(EXIT_FAILURE);
+        }
+
+        sprintf(err_msg, "Matching 'let' Regex ran out of memory on string \"%s\".", string);
+        perror(err_msg);
+
+        free(err_msg);
+        exit(EXIT_FAILURE);
+        
+    } else if (let_match != 0) {
+        
+        // handle matched let
+
+    }
+
+    regfree(&regex);
+}
+
+// temp
+int main() {
+    char* str = "  let s";
+    lex_string(str);
+    return 0;
 }

@@ -14,7 +14,7 @@ Takes an Integ object (defined in './tokens.h') and returns the dynamically allo
 requires that the returned string be freed by the caller.
 */
 static char* disp_int(Integ integer) {
-    char* int_str;
+    char *int_str;
 
     // Extract integer's value.
     const int num = integer.num;
@@ -28,7 +28,7 @@ static char* disp_int(Integ integer) {
 
     // Error if memory allocation fails.
     if (int_str == NULL) {
-        char* err_str;
+        char *err_str;
 
         // Define the length of the hard-coded error message.
         const static int err_msg = 29;
@@ -48,14 +48,14 @@ static char* disp_int(Integ integer) {
 }
 
 // Free an Integ object (defined in './tokens.h').
-void free_integ(Integ* integ) {
+void free_integ(Integ *integ) {
     free(integ);
 }
 
 // Functions related to the Vari token object:
 
 // Free a Vari object (defined in './tokens.h').
-void free_vari(Vari* var) {
+void free_vari(Vari *var) {
     free(var->name);
     free(var);
 }
@@ -66,7 +66,7 @@ Takes a Vari object (defined in './tokens.h') and returns the dynamically alloca
 requires that the returned string be freed by the caller.
 */
 static char* disp_var(Vari var) {
-    char* name, var_str;
+    char *name, *var_str;
 
     // Define the length of extra characters in the Vari object display string.
     const static int var_label = 5;
@@ -82,7 +82,7 @@ static char* disp_var(Vari var) {
 
     // Error if memory allocation fails.
     if (var_str == NULL) {
-        char* err_str;
+        char *err_str;
 
         // Define the length of the hard-coded error message.
         const static int err_msg = 31;
@@ -122,7 +122,7 @@ representation of that token. The object is used for tokens that contain data (e
 Returned strings that contain this data must be freed by the caller. Assume that a given token 
 is paired with a pointer to the correct object.
 */
-char* disp_token(Token tok, void* obj) {
+char* disp_token(Token tok, void *obj) {
     // Assign the Token value as an int.
     const int tok_num = tok;
 
