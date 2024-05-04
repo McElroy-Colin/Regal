@@ -1,11 +1,8 @@
 # Regal V0.1
 
-Python version required: **Python 3.8.0+**
+Overhauling current compiler source code and rewriting in C.
 
-Regal is a WIP non-functional programming language developed by Colin McElroy. Currently, the language is unfinished with progress on compiler source code in the LangDef directory. Regal is intended to have variable declaration, function declaration, static type-checking, implicit typing, optimized evaluation, and more. Updates will be posted here as progress continues.
+Regal is a work-in-progress non-functional programming language developed by Colin McElroy. Currently, the language is unfinished with progress on compiler source code in the LangDef directory. Regal is intended to have variable declaration, function declaration, static type-checking, implicit typing, optimized evaluation, and more. Updates will be posted here as progress continues.
 
 V0.1 Progress:
-- Completed string lexing with a small list of symbols.
-- Parsing accompanied by a custom CFG that parses variable declarations alongside math expressions.
-
-Test code in the LangDef/Testing/CustomTesting module.
+- Working on lexing a small list of symbols.
