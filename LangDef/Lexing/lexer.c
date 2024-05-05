@@ -9,7 +9,9 @@
 void lex_string(char *string) { // include -lregex in gcc compiling
     regex_t regex;
 
-    const int reg_err = regcomp(&regex, "let", 0);
+
+
+    const int reg_err = regcomp(&regex, "(^[:space:]*)let[:space:]", 0);
 
     if (reg_err == 0) {
         char *err_msg, *full_err_msg;
@@ -64,8 +66,8 @@ void lex_string(char *string) { // include -lregex in gcc compiling
         
     } else if (let_match != 0) {
         
-        // handle matched let
-
+        printf("%d, %d", match[0].rm_so, match[0].rm_eo);
+        exit(EXIT_SUCCESS);
     }
 
     regfree(&regex);
