@@ -19,7 +19,7 @@ static char* disp_int(Integ integer) {
     // Extract integer's value.
     const int num = integer.num;
     // Define the length of extra characters in the Integ object display string.
-    const static int int_label = 5;
+    const int int_label = 5;
     // Calculate the number of digits in the integer.
     const int int_str_size = ((int)(ceil(log10(num)) + 1));
 
@@ -31,7 +31,7 @@ static char* disp_int(Integ integer) {
         char *err_str;
 
         // Define the length of the hard-coded error message.
-        const static int err_msg = 29;
+        const int err_msg = 29;
 
         // Create an error message including the integer.
         err_str = malloc((int_str_size + err_msg) * sizeof(char));
@@ -69,7 +69,7 @@ static char* disp_var(Vari var) {
     char *name, *var_str;
 
     // Define the length of extra characters in the Vari object display string.
-    const static int var_label = 5;
+    const int var_label = 5;
 
     // Extract the variable's value.
     name = var.name;
@@ -85,7 +85,7 @@ static char* disp_var(Vari var) {
         char *err_str;
 
         // Define the length of the hard-coded error message.
-        const static int err_msg = 31;
+        const int err_msg = 31;
 
         // Create an error message including the name.
         err_str = malloc((var_str_size + err_msg) * sizeof(char));
