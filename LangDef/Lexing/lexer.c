@@ -4,49 +4,105 @@
 #include <string.h>
 #include "tokens.h"
 
+#define whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f')
 
-void **lex_string(char *str) {
-    void **token_lst;
-    int **token_ident;
+
+int reall_toklst(int ***token_lst, int *lst_buf) {
+    int **temp_ptr;
+
+    temp_ptr = realloc(*token_lst, (*lst_buf) * 2 * sizeof(int*));
+    if (temp_ptr == NULL) {
+        perror("Memory allocation failed: lexer.c -> memory reallocation.");
+        return 0;
+    }
+    *token_lst = temp_ptr;
+    *lst_buf *= 2;
+    return 1;
+}
+
+int alloc_tok(int **token_lst, int place, int size) {
+    token_lst[place] = malloc(size * sizeof(int));
+    if (token_lst == NULL) {
+        perror("Memory allocation failed: lexer.c -> token allocation");
+        return 0;
+    }
+    return 1;
+}
+
+int lookahead(char * str, const char *target, int end_in_sp) {
+    int i;
+
+    for (i = 0; str[i] == target[i]; i++);
+    if (target[i]) {
+        return 0;
+    } else if (end_in_sp) {
+        if (whitespace(str[i])) {
+           for (i; whitespace(str[i]); i++);
+           return i;
+        }
+        return 0;
+    }
+    return i;
+}
+
+
+int **lex_string(char *str) {
+    int **token_lst;
     char curr_char;
-    int i, lst_buf, lded_tok_buf, buf_count, ld_count;
+    int i, lst_buf, tok_count;
 
-    lst_buf = 12;
-    token_lst = malloc(lst_buf * sizeof(void*)); 
-    // check mem alloc
-    lded_tok_buf = (lst_buf / 3) + 1;
-    token_ident = malloc(lded_tok_buf * sizeof(int*));
+    lst_buf = 1;
+    token_lst = malloc(lst_buf * sizeof(int*)); 
     // check mem alloc
 
-    i = 0;
+    i = 0, tok_count = 0;
     curr_char = str[i];
 
     while (curr_char && (curr_char != '\n')) {
         if (curr_char == 'l') {
-            if ((str[i + 1] == 'e') && (str[i + 2] == 't')) {
-                if (buf_count == lst_buf) {
-                    void *temp_ptr;
-
-                    temp_ptr = realloc(token_lst, lst_buf * 2 * sizeof(void*));
-                    if (temp_ptr == NULL) {
-                        perror("Memory allocation failed: lexer.c -> 'let' keyword memory reallocation.");
-                        free(token_lst);
-                        free(token_ident);
-                        exit(EXIT_FAILURE);
-                    }
-                    token_lst = temp_ptr;
-                    lst_buf *= 2;
+            char *temp;
+            int next;
+            
+            temp = str;
+            temp += 1;
+            next = lookahead(temp, "et", 1);
+            if (next) {
+                if (lst_buf == tok_count) {
+                    reall_toklst(&token_lst, &lst_buf);
                 }
                 int *int_ptr;
 
-                int_ptr = (int*)token_lst[buf_count];
-                *int_ptr = Let;
-                buf_count += 1;
+                str += next + 1;
+                if (alloc_tok(token_lst, tok_count, 1)) {
+                    int_ptr = token_lst[tok_count];
+                    if(tok_count == 1) {
+                        *int_ptr = Int;
+                    } else {
+                        *int_ptr = Let;
+                    }
+                    tok_count += 1;
+                } else {
+                    free(token_lst);
+                    exit(EXIT_FAILURE);
+                }
             }
         }
+        curr_char = str[0];
     }
 
-    return NULL;
+    return token_lst;
+}
+
+// temp
+int main() {
+    char* str;
+    int **tok_lst;
+    str = "let let ";
+    tok_lst = lex_string(str);
+
+    printf("%d, %d", tok_lst[0][0], tok_lst[1][1]);
+
+    return 0;
 }
 
 
@@ -142,9 +198,3 @@ const int lex_keywrd_let(char *string) {
     return err_val;
 }
 */
-
-// temp
-int main() {
-    char* str;
-    return 0;
-}
