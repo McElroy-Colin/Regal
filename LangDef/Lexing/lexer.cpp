@@ -1,66 +1,69 @@
+// File containing the Regal lexer function alongside any additional helper code.
+
 #include <list>
 #include <vector>
 #include <variant>
 #include "tokens.hpp"
-#include "../langdef.hpp"
 
-#define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f')
-#define is_valid_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_')
-#define is_integer(c) (c >= '0') && (c <= '9')
+// Anonymous namespace containing helper functions/macros for the Regal lexer function.
+namespace {
 
-using String = std::string;
-using IntArray = std::vector<int>;
-using DataArray = std::vector<std::variant<int, String>>;
-using IntMatrix = std::list<DataArray>;
+    #define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f')
+    #define is_valid_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_')
+    #define is_integer(c) (c >= '0') && (c <= '9')
 
-int match_whitespace(String line, int start_offset) {
-    int whitespace_index;
+    int match_whitespace(String line, int start_offset) {
+        int whitespace_index;
 
-    for (whitespace_index = start_offset; is_whitespace(line[whitespace_index]); whitespace_index++);
-    return whitespace_index;
-}
-
-IntArray match_integer(String line, int string_index) {
-    int integer_index, integer_value;
-
-    for (integer_index = string_index; is_integer(line[integer_index]); integer_index++);
-    integer_value = stoi(line.substr(string_index, (integer_index - string_index)));
-    return { integer_index, integer_value };
-}
-
-DataArray match_label(String line, int string_index) {
-    String label;
-    int label_index;
-
-    for (label_index = string_index; is_valid_label(line[label_index]) || 
-        is_integer(line[label_index]); label_index++);
-    label = line.substr(string_index, (label_index - string_index));
-    return { label_index, label };
-}
-
-int match_token(String word_segment, String target, int string_index, bool end_in_whitespace) {
-    int word_index;
-
-    for (word_index = string_index; word_segment[word_index] 
-        && (word_segment[word_index] == target[word_index - string_index]); word_index++);
-    if (target[word_index - string_index]) {
-        return string_index;
-    } else if (end_in_whitespace) {
-        if ((is_whitespace(word_segment[word_index])) || (!word_segment[word_index])) {
-            return match_whitespace(word_segment, word_index);
-        }
-        return string_index;
+        for (whitespace_index = start_offset; is_whitespace(line[whitespace_index]); whitespace_index++);
+        return whitespace_index;
     }
-    return word_index;
+
+    IntArray match_integer(String line, int string_index) {
+        int integer_index, integer_value;
+
+        for (integer_index = string_index; is_integer(line[integer_index]); integer_index++);
+        integer_value = stoi(line.substr(string_index, (integer_index - string_index)));
+        return { integer_index, integer_value };
+    }
+
+    DataArray match_label(String line, int string_index) {
+        String label;
+        int label_index;
+
+        for (label_index = string_index; is_valid_label(line[label_index]) || 
+            is_integer(line[label_index]); label_index++);
+        label = line.substr(string_index, (label_index - string_index));
+        return { label_index, label };
+    }
+
+    int match_token(String word_segment, String target, int string_index, bool end_in_whitespace) {
+        int word_index;
+
+        for (word_index = string_index; word_segment[word_index] 
+            && (word_segment[word_index] == target[word_index - string_index]); word_index++);
+        if (target[word_index - string_index]) {
+            return string_index;
+        } else if (end_in_whitespace) {
+            if ((is_whitespace(word_segment[word_index])) || (!word_segment[word_index])) {
+                return match_whitespace(word_segment, word_index);
+            }
+            return string_index;
+        }
+        return word_index;
+    }
+
 }
 
-IntMatrix lex_string(String line) {
-    IntMatrix token_list;
+TokenList lex_string(String line) {
+    TokenList token_list;
     int string_index = 0;
     int matched_index;
 
     while (string_index < line.size()) {
-        if (is_whitespace(line[string_index])) {
+        if (line[string_index] == '\n') {
+            return token_list;
+        } else if (is_whitespace(line[string_index])) {
             string_index = match_whitespace(line, string_index);
         } else if (is_integer(line[string_index])) {
             IntArray position_integer = match_integer(line, string_index);
@@ -75,6 +78,11 @@ IntMatrix lex_string(String line) {
             string_index = matched_index;
         } else if ((matched_index = match_token(line, "now", string_index, true)) > string_index) {
             DataArray token = { Now };
+
+            token_list.push_back(token);
+            string_index = matched_index;
+        } else if ((matched_index = match_token(line, "nothing", string_index, true)) > string_index) {
+            DataArray token = { Nothing };
 
             token_list.push_back(token);
             string_index = matched_index;
