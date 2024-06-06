@@ -31,7 +31,7 @@ namespace {
 
 //  Match a custom variable label in the given string at the given index.
 //  Return both the index succeeding the label and the label text in a variant vector.
-//      This function assumes that the first character at the given index is valid but not a number.
+//      This function assumes that the first character at the given index is a label but not a number.
     Token match_label(String line, int string_index) {
         String label;
         int label_index;
