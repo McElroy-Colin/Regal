@@ -11,20 +11,20 @@ All tokens are case-sensitive. There are no capital letters in keywords.
 
 Declarative tokens:
 
-    Variable/function names: Variable/function names are non-case-sensitive but must start with 
-    a letter or '_' followed by any number of alphanumeric characters as well as '_'.
+    Variable/function labels: Variable/function labels must start with a letter or '_' followed by 
+    any number of alphanumeric characters as well as '_'.
 
     'let': Denotes the assignment of a new variable or function. (i.e. 'let x = 3')
 
-    'now': Denotes the reassigment/retyping of an existing variable or function. (i.e. 'now x = 4')
+    'now': Denotes the reassigment/retyping of an existing variable or function. (i.e. 'now x = true')
 
-    '=': Assigns the given variable/function name to the given expression.
+    '=': Assigns the given variable/function label to the given expression.
 
 
 Integer tokens:
 
-    Integers: Whole numbers of any length. Negative numbers are denoted with '(-<int>)' to differentiate 
-    from subtraction. (i.e. '(-23)' is the integer -23)
+    Integers: Signed whole numbers. Negative integers cannot have whitespace between 
+    the '-' and number characters.
 
     '**': Two asterisks denote an exponential relationship between integers. (i.e. '2**3' is 2 to the 3rd power)
 

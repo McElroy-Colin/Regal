@@ -1,16 +1,13 @@
 // File containing the Regal lexer function alongside any additional helper code.
 
-#include <list>
-#include <vector>
-#include <variant>
-#include "tokens.hpp"
+#include "../langdef.hpp"
 
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {
 
     #define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f')
     #define is_integer(c) (c >= '0') && (c <= '9')
-    #define is_valid_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || is_integer(c)
+    #define is_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || is_integer(c)
 
 //  Match sequential whitespace characters in the given string starting at the given index. 
 //  Return the index succeeding the final whitespace character.
@@ -35,18 +32,18 @@ namespace {
 //  Match a custom variable label in the given string at the given index.
 //  Return both the index succeeding the label and the label text in a variant vector.
 //      This function assumes that the first character at the given index is valid but not a number.
-    DataArray match_label(String line, int string_index) {
+    Token match_label(String line, int string_index) {
         String label;
         int label_index;
 
-        for (label_index = string_index; is_valid_label(line[label_index]); label_index++);
+        for (label_index = string_index; is_label(line[label_index]); label_index++);
         label = line.substr(string_index, (label_index - string_index));
         return { label_index, label };
     }
 
 //  Match the given target string to the given line starting at the given index.
 //  Return the index succeeding the target if matched or the original given index if not matched, 
-//  returned index also succeeds ay following whitespace if the given boolean is true.
+//  returned index also succeeds any following whitespace if the given boolean is true.
     int match_token(String line, String target, int string_index, bool end_in_whitespace) {
         int word_index;
 
@@ -82,80 +79,89 @@ TokenList lex_string(String line) {
 
         } else if (is_integer(line[string_index])) {
             IntArray position_integer = match_integer(line, string_index);
-            DataArray token = { Int, position_integer[1] }; // include the integer value in the token vector
+            Token token = { Int, position_integer[1] }; // include the integer value in the token vector
 
             token_list.push_back(token);
             string_index = position_integer[0];
 
         } else if ((matched_index = match_token(line, "let", string_index, true)) > string_index) {
-            DataArray token = { Let };
+            Token token = { Let };
 
             token_list.push_back(token);
             string_index = matched_index;
 
         } else if ((matched_index = match_token(line, "now", string_index, true)) > string_index) {
-            DataArray token = { Now };
+            Token token = { Now };
 
             token_list.push_back(token);
             string_index = matched_index;
 
         } else if ((matched_index = match_token(line, "nothing", string_index, true)) > string_index) {
-            DataArray token = { Nothing };
+            Token token = { Nothing };
 
             token_list.push_back(token);
             string_index = matched_index;
 
-        }  else if (is_valid_label(line[string_index])) {
-            DataArray position_label = match_label(line, string_index);
-            DataArray token = { Var, position_label[1] }; // include the label text in the token vector
+//      Assume this label starts with a letter or '_' since the same index was checked for an integer already.
+        }  else if (is_label(line[string_index])) {
+            Token position_label = match_label(line, string_index);
+            Token token = { Var, position_label[1] }; // include the label text in the token vector
 
             token_list.push_back(token);
-            string_index = std::get<int>(position_label[0]);
+            string_index = extract<int>(position_label[0]);
         
         } else if (match_token(line, "**", string_index, false) > string_index) {
-            DataArray token = { Exp };
+            Token token = { Exp };
 
             token_list.push_back(token);
             string_index += 2;
         
         } else if (line[string_index] == '=') {
-            DataArray token = { Bind };
+            Token token = { Bind };
 
             token_list.push_back(token);
             string_index++;
         
         } else if (line[string_index] == '+') {
-            DataArray token = { Plus };
+            Token token = { Plus };
 
             token_list.push_back(token);
             string_index++;
         
         } else if (line[string_index] == '-') {
-            DataArray token = { Minus };
+            if (is_integer(line[string_index + 1])) {
+                IntArray position_integer = match_integer(line, ++string_index);
+                Token token = { Int, -position_integer[1] };
 
-            token_list.push_back(token);
-            string_index++;
-        
+                token_list.push_back(token);
+                string_index = position_integer[0];
+            } else {
+                Token token = { Minus };
+
+                token_list.push_back(token);
+                string_index++;
+            }
+
         } else if (line[string_index] == '/') {
-            DataArray token = { Div };
+            Token token = { Div };
 
             token_list.push_back(token);
             string_index++;
         
         } else if (line[string_index] == '*') {
-            DataArray token = { Mult };
+            Token token = { Mult };
 
             token_list.push_back(token);
             string_index++;
         
         } else if (line[string_index] == '(') {
-            DataArray token = { LeftPar };
+            Token token = { LeftPar };
 
             token_list.push_back(token);
             string_index++;
         
         } else if (line[string_index] == ')') {
-            DataArray token = { RightPar };
+            Token token = { RightPar };
 
             token_list.push_back(token);
             string_index++;
