@@ -2,41 +2,43 @@ Context-Free Grammar that dictates order of syntax in Regal
 
     - At least one whitespace character must separate certain tokens.
         - Tokens that use special symbols (e.g. '+' or '**' or '=') do not need
-        whitespace separating them from other tokens.
+          whitespace separating them from other tokens.
     - Non-terminals are capitalized.
     - Terminals are surrounded in single quotes. (e.g. 'example')
     - Undefined terminals are surrounded in single-quote carrots. (e.g. '<example>')
     - The '|' symbol represents OR.
 
 
-Line -> KeywrdExpr
+Line -> KeywordStatement
 
-KeywrdExpr -> LetExpr | NowExpr
+KeywordStatement -> LetStatement | NowStatement
 
-LetExpr -> 'let' '<var>' '=' Expr
+LetStatement -> 'let' '<var>' '=' Expression
     <var> is a custom variable name
 
-NowExpr -> 'now' '<var>' '=' Expr
+NowStatement -> 'now' '<var>' '=' Expression
     <var> is a custom variable name
 
-Expr -> KeywrdExpr | BaseExpr 
+Expression -> KeywordStatement | BaseExpr | NothingExpr
 
-BaseExpr -> MathExpr | VarExpr
+BaseExpr -> MathExpr
 
-MathExpr -> AddExpr
+NothingExpr -> 'nothing'
 
-AddExpr -> MultExpr '<add_op>' AddExpr | MultExpr
+MathExpr -> AdditiveExpr
+
+AdditiveExpr -> MultiplicativeExpr '<add_op>' AdditiveExpr | MultiplicativeExpr
     <add_op> is any of the additive subset of the primitive operators.
 
-MultExpr -> ExponExpr '<mult_op>' MultExpr | ExponExpr
-     <mult_op> is any of the multiplicative subset of the primitive operators.
+MultiplicativeExpr -> ExponentialExpr '<mult_op>' MultiplicativeExpr | ExponentialExpr
+    <mult_op> is any of the multiplicative subset of the primitive operators.
 
-ExponExpr -> PrimExpr '**' ExponExpr | PrimExpr
+ExponentialExpr -> PrimitiveExpr '**' ExponentialExpr | PrimitiveExpr
 
-PrimExpr -> NumExpr | VarExpr | '('Expr')'
+PrimitiveExpr -> NumberExpr | VariableExpr | '('Expression')'
 
-NumExpr -> '<integer>'
+NumberExpr -> '<integer>'
     <integer> is any integer
 
-VarExpr -> '<var>'
+VariableExpr -> '<var>'
     <var> is a custom variable name

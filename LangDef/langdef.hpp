@@ -1,9 +1,8 @@
 // Header file containing aliases and values for language definition.
 
 #include <string>
-#include <vector>  
+#include <vector>
 #include <variant>
-#include <tuple>
 #include <list>
 
 #ifndef LANGDEF_HPP
@@ -13,17 +12,11 @@ enum ReturnValue {
     FAILURE = -1,
 };
 
-// Lexing and parsing type aliases.
 using String = std::string;
 using IntArray = std::vector<int>;
-using Token = std::vector<std::variant<int, String>>;
-using TokenArray = std::vector<Token>;
-using TokenList = std::list<Token>;
 
-template<typename Type1, typename Type2>
-using Tuple = std::tuple<Type1, Type2>;
-template<typename Type>
-using extract = std::get<Type>;
+template<typename T1, typename T2>
+using Pair = std::pair<T1, T2>;
 
 // Enum for all tokens in Regal.
 enum TokenKey {
@@ -47,27 +40,16 @@ enum TokenKey {
     Nothing
 };
 
-// Vector alias for token keys.
+// Useful subsets of tokens.
 using TokenKeyArray = std::vector<TokenKey>;
+TokenKeyArray keyword_tokens = {Let, Now};
+TokenKeyArray number_tokens = {Int};
+TokenKeyArray additive_tokens = {Plus, Minus};
+TokenKeyArray multiplicative_tokens = {Mult, Div};
 
-// TokenKey subsets for parsing.
-TokenKeyArray assignment_keywords = { Let, Now };
-TokenKeyArray primitive_operators = { Plus, Minus, Mult, Div, Exp };
-TokenKeyArray additive_operators = { Plus, Minus };
-TokenKeyArray multiplicative_operators = { Mult, Div };
-
-// Enum for actions that the parser and evaluator must perform.
-enum Action {
-//  Variables
-    Assign, Reassign,
-
-//  Primitive Operators
-    Add, Subtract, Multiply, Divide, Exponential
-};
-
-// Alias representing the instructions sent from the parser to the evaluator.
-// While functionally the same as TokenList, each vector will contain an Action and its necessary data.
-//     Example: { Add, 3, 6 } represents the action of 3 + 6
-using ActionList = std::list<std::vector<std::variant<int, String>>>;
+// Token aliases.
+using Token = std::vector<std::variant<TokenKey, int, String>>;
+using TokenArray = std::vector<Token>;
+using TokenList = std::list<Token>;
 
 #endif

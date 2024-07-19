@@ -108,7 +108,7 @@ TokenList lex_string(String line) {
             Token token = { Var, position_label[1] }; // include the label text in the token vector
 
             token_list.push_back(token);
-            string_index = extract<int>(position_label[0]);
+            string_index = std::get<int>(position_label[0]);
         
         } else if (match_token(line, "**", string_index, false) > string_index) {
             Token token = { Exp };

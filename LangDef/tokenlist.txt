@@ -12,37 +12,37 @@ All tokens are case-sensitive. There are no capital letters in keywords.
 Declarative tokens:
 
     Variable/function labels: Variable/function labels must start with a letter or '_' followed by 
-    any number of alphanumeric characters as well as '_'.
+    any number of alphanumeric characters or '_'.
 
-    'let': Denotes the assignment of a new variable or function. (i.e. 'let x = 3')
+    'let': Denotes the assignment of a new variable or function. (e.g. 'let x = 3')
 
-    'now': Denotes the reassigment/retyping of an existing variable or function. (i.e. 'now x = true')
+    'now': Denotes the reassigment/retyping of an existing variable or function. (e.g. 'now x = true')
 
     '=': Assigns the given variable/function label to the given expression.
 
 
-Integer tokens:
+Mathematical tokens:
 
     Integers: Signed whole numbers. Negative integers cannot have whitespace between 
     the '-' and number characters.
 
-    '**': Two asterisks denote an exponential relationship between integers. (i.e. '2**3' is 2 to the 3rd power)
+    '**': Two asterisks denote an exponential relationship between numbers. (e.g. '2**3' is 2 to the 3rd power)
 
-    '+': Adds two integers.
+    '+': Adds two numbers.
 
-    '-': Subtracts two integers.
+    '-': Subtracts two numbers.
 
-    '*': Multiplies two integers.
+    '*': Multiplies two numbers.
 
-    '/': Divides two integters and truncates any decimal digits.
+    '/': Divides two numbers and truncates any decimal digits.
 
-    '(': Denotes math groupings to assign an order of opoerations to equations.
+    '(': Denotes expression groupings to assign an order of operations to expressions.
 
-    ')': Closes math groupings.
+    ')': Closes expression groupings.
 
 
 Special tokens:
 
     'nothing': The equivalent of 'NULL', 'nil', or '()' in other languages.
 
-    '\n': The newline character separates expressions.
+    '\n': The newline character separates statements.
