@@ -1,10 +1,10 @@
 // Header file containing aliases, values and structs for parsing and AST generation.
 
-#include "../langdef.hpp"
+#include "../../../include/inc_langdef/langdef.hpp"
 #include <memory>
 
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#ifndef PARSER_COPY_HPP
+#define PARSER_COPY_HPP
 
 // Enum for potential operations.
 enum Operator {

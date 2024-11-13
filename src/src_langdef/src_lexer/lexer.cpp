@@ -1,6 +1,6 @@
 // File containing the Regal lexer function alongside any additional helper code.
 
-#include "../langdef.hpp"
+#include "../../../include/inc_langdef/langdef.hpp"
 
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {

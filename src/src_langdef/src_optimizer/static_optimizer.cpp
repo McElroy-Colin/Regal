@@ -1,6 +1,6 @@
 #include <ranges>
-#include "../Parser/parser_copy.hpp"
-#include "static_optimizer.hpp"
+#include "../../../include/inc_langdef/inc_parser/parser.hpp"
+#include "../../../include/inc_langdef/inc_optimizer/static_optimizer.hpp"
 
 // Temp
 #include <iostream>

@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "../Parser/parser.hpp"
+#include "../inc_parser/parser.hpp"
 
 #ifndef EVALUATOR_HPP
 #define EVALUATOR_HPP

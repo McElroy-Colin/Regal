@@ -1,6 +1,9 @@
-#include "../LangDef/Parser/parser.cpp"
-#include "../LangDef/Lexer/lexer.cpp"
 #include <iostream>
+#include "../../src_langdef/src_parser/parser.cpp"
+#include "../../src_langdef/src_lexer/lexer.cpp"
+#include "parser_copy.hpp"
+
+using String = std::string;
 
 int main() {
     String line = "let x = 2*(4 - 3)";

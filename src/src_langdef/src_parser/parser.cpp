@@ -1,6 +1,6 @@
 // File containing the Regal AST generator.
 
-#include "parser.hpp"
+#include "../../../include/inc_langdef/inc_parser/parser.hpp"
 
 // Parsing function definitions.
 Action parse_line(TokenList& token_list);
