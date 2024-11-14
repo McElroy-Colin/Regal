@@ -6,11 +6,6 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-// Enum for potential operations.
-enum Operator {
-    None, Add, Subtract, Multiply, Divide, Exponential
-};
-
 // Enum for other types of AST nodes that do not need a struct.
 enum OtherNodes {
     ON_nothing
@@ -25,11 +20,10 @@ struct Reassign;
 struct Nothing;
 
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
-
 using Action = std::variant<
     std::shared_ptr<Integer>, // 0
     std::shared_ptr<Variable>, // 1
-    std::shared_ptr<BinaryOperator>, // 2 
+    std::shared_ptr<BinaryOperator>, // 2
     std::shared_ptr<Assign>, // 3
     std::shared_ptr<Reassign>, // 4
     OtherNodes, // 5
@@ -64,12 +58,12 @@ struct Variable {
 
 // Struct for a binary operator node.
 struct BinaryOperator {
-    Operator op;
+    TokenKey op;
     Action expression1, expression2;
 
-    BinaryOperator() : op(None), expression1(0), expression2(0) {}
+    BinaryOperator() : op(Nothing), expression1(0), expression2(0) {}
 
-    BinaryOperator(Operator op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
+    BinaryOperator(TokenKey op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
 
     BinaryOperator(const BinaryOperator& other) : 
         op(other.op), expression1(other.expression1), 

@@ -1,9 +1,7 @@
 #include <ranges>
 #include "../../../include/inc_langdef/inc_parser/parser.hpp"
-#include "../../../include/inc_langdef/inc_optimizer/static_optimizer.hpp"
+#include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
-// Temp
-#include <iostream>
 
 bool type_mismatch(Action& action1, Action& action2) {
     return action1.index() != action2.index();
@@ -18,11 +16,11 @@ bool incompatible_type(Action& action, std::vector<size_t> types) {
     return true;
 }
 
-int power(int base, int exp) {
+int int_exp(int base, int exp) {
     if (exp == 0) {
         return 1;
     } else if (exp < 0) {
-        perror("Exponential must be a nonnegative exponent.");
+        perror("Integer exponential must use a nonnegative exponent.");
         exit(EXIT_FAILURE);
     }
 
@@ -36,27 +34,25 @@ int power(int base, int exp) {
     return rec_power(rec_power, base, exp);
 }
 
-bool evaluate_action(Action& action, VarMap& var_stack) {
+
+bool optimize_action(Action& action, VarMap& var_stack) {
     switch (action.index()) {
         case 0: // Integer
             return true;
+
         case 1: // Variable
             return true;
+
         case 2: // BinaryOperator
             std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
 
-            Operator current_op = binary_op->op;
-
-            std::cout << std::get<std::shared_ptr<Integer>>(binary_op->expression1).use_count() << std::endl;
+            TokenKey current_op = binary_op->op;
 
             Action current_expr1 = std::move(binary_op->expression1);
-
-            std::cout << std::get<std::shared_ptr<Integer>>(binary_op->expression1).use_count() << std::endl;
-            std::cout << std::get<std::shared_ptr<Integer>>(current_expr1).use_count() << std::endl;
-
             Action current_expr2 = binary_op->expression2;
-            evaluate_action(current_expr1, var_stack);
-            evaluate_action(current_expr2, var_stack);
+            
+            optimize_action(current_expr1, var_stack);
+            optimize_action(current_expr2, var_stack);
 
             if (type_mismatch(current_expr1, current_expr2)) {
                 perror("");
@@ -72,16 +68,16 @@ bool evaluate_action(Action& action, VarMap& var_stack) {
                     std::shared_ptr<Integer> int2 = std::get<std::shared_ptr<Integer>>(current_expr2);
                     
                     switch (current_op) {
-                        case Add:
+                        case Plus:
                             action = std::make_shared<Integer>(int1->number + int2->number);
                             return true;
-                        case Subtract:
+                        case Minus:
                             action = std::make_shared<Integer>(int1->number - int2->number);
                             return true;
-                        case Multiply:
+                        case Mult:
                             action = std::make_shared<Integer>(int1->number * int2->number);
                             return true;
-                        case Divide: 
+                        case Div: 
                             if (int2->number == 0) {
                                 perror("");
                                 exit(EXIT_FAILURE);
@@ -89,23 +85,41 @@ bool evaluate_action(Action& action, VarMap& var_stack) {
 
                             action = std::make_shared<Integer>(int1->number / int2->number);
                             return true;
-                        case Exponential:
-                            action = std::make_shared<Integer>(power(int1->number, int2->number));
+                        case Exp:
+                            action = std::make_shared<Integer>(int_exp(int1->number, int2->number));
                             return true;
                     }
             }
+
+        case 3: // Assign
+            VarData var_value;
+            
+            std::shared_ptr<Assign> assignment = std::move(std::get<std::shared_ptr<Assign>>(action));
+            Action expr = assignment->expression;
+            optimize_action(expr, var_stack);
+            evaluate_primitive(expr, var_stack, var_value);
+
+            var_stack[assignment->variable] = var_value;
+            
+            return true;
     }
 }
 
-int main() {
-    Action num1 = std::make_shared<Integer>(2);
-    Action num2 = std::make_shared<Integer>(4);
+bool evaluate_primitive(Action& action, VarMap& var_stack, VarData& action_value) {
+    switch (action.index()) {
+        case 0: // Integer
+            std::shared_ptr<Integer> int_action = std::move(std::get<std::shared_ptr<Integer>>(action));
+            int a = int_action->number;
 
-    Action add = std::make_shared<BinaryOperator>(Add, num1, num2);
+            return true;
 
-    VarMap empty;
+        case 1: // Variable
+            std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
+            
 
-    evaluate_action(add, empty);
+            return true;
 
-    return 0;
+        default:
+            return false;
+    }
 }

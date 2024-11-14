@@ -27,7 +27,7 @@ namespace {
             return false;
         }
 
-        Token current_token = token_list.front();
+        Token& current_token = token_list.front();
 
         return (std::get<TokenKey>(current_token[0]) == target_token);
     }
@@ -37,8 +37,6 @@ namespace {
         if (token_list.empty()) {
             return false;
         }
-
-        Token current_token = token_list.front();
         
         for (int target_index = 0; target_index < target_tokens.size(); target_index++) {
             if (lookahead(token_list, target_tokens[target_index])) {
@@ -48,27 +46,38 @@ namespace {
         return false;
     }
 
-//  Pop the first element of the given list if it matches the given token and return popped token.
-    Token match_bypass(TokenList& token_list, TokenKey target_token) {
+//  Pop the first element of the given list if it matches the given token.
+    void match_bypass(TokenList& token_list, TokenKey target_token) {
         if (lookahead(token_list, target_token)) {
-            Token head = token_list.front();
-
             token_list.pop_front();
 
-            return head;
+            return;
         } else {
             perror("Parsing failed");
             exit(EXIT_FAILURE);
         }
     }
 
-//  Pop the first element of the given list if it matches any of the given tokens and return the popped token.
-    Token match_bypass_any(TokenList& token_list, TokenKeyArray& target_tokens) {
-        if (lookahead_any(token_list, target_tokens)) {
-            Token head = token_list.front();
-
+//  Pop the first element of the given list and store it if it matches the given token
+    void query_bypass(TokenList& token_list, TokenKey target_token, Token& return_val) {
+        if (lookahead(token_list, target_token)) {
+            return_val = token_list.front();
             token_list.pop_front();
-            return head;
+
+            return;
+        } else {
+            perror("Parsing failed");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+//  Pop the first element of the given list and store it if it matches any of the given tokens.
+    void query_bypass_any(TokenList& token_list, TokenKeyArray& target_tokens, Token& return_val) {
+        if (lookahead_any(token_list, target_tokens)) {
+            return_val = token_list.front();
+            token_list.pop_front();
+
+            return;
         } else {
             perror("Parsing failed");
             exit(EXIT_FAILURE);
@@ -102,12 +111,15 @@ Action parse_keyword_statement(TokenList& token_list) {
 // Parse a 'let' definition statement.
 Action parse_let_statement(TokenList& token_list) {
     Action expression;
+    Token variable_token;
     String variable;
+
 
     match_bypass(token_list, Let); // Bypass 'let'
 
 //  Bypass and store the variable name.
-    variable = std::get<String>(match_bypass(token_list, Var)[1]);
+    query_bypass(token_list, Var, variable_token);
+    variable = std::get<String>(variable_token[1]);
 
     match_bypass(token_list, Bind); // Bypass '='
 
@@ -120,12 +132,14 @@ Action parse_let_statement(TokenList& token_list) {
 // Parse a 'now' redefinition statement.
 Action parse_now_statement(TokenList& token_list) {
     Action expression;
+    Token variable_token;
     String variable;
 
     match_bypass(token_list, Now); // Bypass 'now'
 
 //  Bypass and store the variable name.
-    variable = std::get<String>(match_bypass(token_list, Var)[1]);
+    query_bypass(token_list, Var, variable_token);
+    variable = std::get<String>(variable_token[1]);
 
     match_bypass(token_list, Bind); // Bypass '='
 
@@ -194,30 +208,24 @@ Action parse_additive_expression(TokenList& token_list) {
 
 //  Check for '+' or '-'.
     if (lookahead_any(token_list, additive_tokens)) {
-        TokenKey operator_token;
+        Token operator_token;
+        TokenKey operator_key;
         Action additive_expression;
-        Operator additive_operator;
 
 //      Bypass and store the additive operator.
-        operator_token = std::get<TokenKey>(match_bypass_any(token_list, additive_tokens)[0]);
+        query_bypass_any(token_list, additive_tokens, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Bypass and store the Additive Expression after '+' or '-'.
         additive_expression = parse_additive_expression(token_list);
 
-//      Convert the operator token to an Operator value (defined in ./parser.hpp).
-        switch (operator_token) {
-            case Plus:
-                additive_operator = Add;
-                break;
-            case Minus:
-                additive_operator = Subtract;
-                break;
-            default:
-                perror("Parsing failed.");
-                exit(EXIT_FAILURE);
+//      Ensure that the operator is additive.        
+        if ((operator_key == Plus) || (operator_key == Minus)) {
+            return std::make_shared<BinaryOperator>(operator_key, multiplicative_expression, additive_expression);
         }
-
-        return std::make_shared<BinaryOperator>(additive_operator, multiplicative_expression, additive_expression);
+        
+        perror("Parsing failed.");
+        exit(EXIT_FAILURE);
     }
     
     return multiplicative_expression;
@@ -232,30 +240,24 @@ Action parse_multiplicative_expression(TokenList& token_list) {
 
 //  Check for '*' or '/-'.
     if (lookahead_any(token_list, multiplicative_tokens)) {
-        TokenKey operator_token;
+        Token operator_token;
+        TokenKey operator_key;
         Action multiplicative_expression;
-        Operator multiplicative_operator;
 
 //      Bypass and store the multiplicative operator.
-        operator_token = std::get<TokenKey>(match_bypass_any(token_list, multiplicative_tokens)[0]);
+        query_bypass_any(token_list, multiplicative_tokens, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Bypass and store the Multiplicative Expression after '*' or '/'.
         multiplicative_expression = parse_multiplicative_expression(token_list);
 
-//      Convert the operator token to an Operator value (defined in ./parser.hpp).
-        switch (operator_token) {
-            case Mult:
-                multiplicative_operator = Multiply;
-                break;
-            case Div:
-                multiplicative_operator = Divide;
-                break;
-            default:
-                perror("Parsing failed.");
-                exit(EXIT_FAILURE);
+//      Ensure that the operator is multiplicative.
+        if ((operator_key == Mult) || (operator_key == Div)) {
+            return std::make_shared<BinaryOperator>(operator_key, exponential_expression, multiplicative_expression);
         }
 
-        return std::make_shared<BinaryOperator>(multiplicative_operator, exponential_expression, multiplicative_expression);
+        perror("Parsing failed.");
+        exit(EXIT_FAILURE);
     }
     
     return exponential_expression;
@@ -278,7 +280,7 @@ Action parse_exponential_expression(TokenList& token_list) {
 //      Bypass and store the Exponential Expression after '**'.
         exponential_expression = parse_exponential_expression(token_list);
 
-        return std::make_shared<BinaryOperator>(Exponential, primitive_expression, exponential_expression);
+        return std::make_shared<BinaryOperator>(Exp, primitive_expression, exponential_expression);
     }
 
     return primitive_expression;
@@ -314,7 +316,7 @@ Action parse_number_expression(TokenList& token_list) {
     TokenKey number_type;
     
 //  Bypass and identify the number type of the number token.
-    number_token = match_bypass_any(token_list, number_tokens);
+    query_bypass_any(token_list, number_tokens, number_token);
     number_type = std::get<TokenKey>(number_token[0]);
     
 //  Check the type of the number.
@@ -332,10 +334,12 @@ Action parse_number_expression(TokenList& token_list) {
 
 // Parse a Variable Expression.
 Action parse_variable_expression(TokenList& token_list) {
+    Token variable_token;
     String variable;
 
 //  Bypass and store the variable name.
-    variable = std::get<String>(match_bypass(token_list, Var)[1]);
+    query_bypass(token_list, Var, variable_token);
+    variable = std::get<String>(variable_token[1]);
 
     return std::make_shared<Variable>(variable);
 }
