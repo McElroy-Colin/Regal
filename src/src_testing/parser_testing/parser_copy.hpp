@@ -6,45 +6,39 @@
 #ifndef PARSER_COPY_HPP
 #define PARSER_COPY_HPP
 
-// Enum for potential operations.
-enum Operator {
-    None, Add, Subtract, Multiply, Divide, Exponential
-};
-
 // Enum for other types of AST nodes that do not need a struct.
-enum OtherNodes {
-    ON_nothing
+enum OtherNodes_c {
+    ON_nothing_c
 };
 
 // AST node definitions.
-struct Integer;
-struct Variable;
-struct BinaryOperator;
-struct Assign;
-struct Reassign;
-struct Nothing;
+struct Integer_c;
+struct Variable_c;
+struct BinaryOperator_c;
+struct Assign_c;
+struct Reassign_c;
+struct Nothing_c;
 
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
-
-using Action = std::variant<
-    std::shared_ptr<Integer>, // 0
-    std::shared_ptr<Variable>, // 1
-    std::shared_ptr<BinaryOperator>, // 2 
-    std::shared_ptr<Assign>, // 3
-    std::shared_ptr<Reassign>, // 4
-    OtherNodes, // 5
+using Action_c = std::variant<
+    std::shared_ptr<Integer_c>, // 0
+    std::shared_ptr<Variable_c>, // 1
+    std::shared_ptr<BinaryOperator_c>, // 2 
+    std::shared_ptr<Assign_c>, // 3
+    std::shared_ptr<Reassign_c>, // 4
+    OtherNodes_c, // 5
     int
 >;
 
 // Struct for an Integer node.
-struct Integer {
+struct Integer_c {
     int number;
 
-    Integer() : number(0) {}
+    Integer_c() : number(0) {}
 
-    Integer(int n) : number(n) {}
+    Integer_c(int n) : number(n) {}
 
-    Integer(const Integer& other) : number(other.number) {}
+    Integer_c(const Integer_c& other) : number(other.number) {}
 
     void update(int replacement) {
         number = replacement;
@@ -52,52 +46,52 @@ struct Integer {
 };
 
 // Struct for a Variable node.
-struct Variable {
+struct Variable_c {
     String variable;
 
-    Variable() : variable("") {}
+    Variable_c() : variable("") {}
 
-    Variable(String var) : variable(var) {}
+    Variable_c(String var) : variable(var) {}
 
-    Variable(const Variable& other) : variable(other.variable) {}
+    Variable_c(const Variable_c& other) : Variable_c(other.variable) {}
 };
 
 // Struct for a binary operator node.
-struct BinaryOperator {
-    Operator op;
-    Action expression1, expression2;
+struct BinaryOperator_c {
+    TokenKey op;
+    Action_c expression1, expression2;
 
-    BinaryOperator() : op(None), expression1(0), expression2(0) {}
+    BinaryOperator_c() : op(Nothing), expression1(0), expression2(0) {}
 
-    BinaryOperator(Operator op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
+    BinaryOperator_c(TokenKey op, Action_c e1, Action_c e2) : op(op), expression1(e1), expression2(e2) {}
 
-    BinaryOperator(const BinaryOperator& other) : 
+    BinaryOperator_c(const BinaryOperator_c& other) : 
         op(other.op), expression1(other.expression1), 
         expression2(other.expression2) {}
 };
 
 // Struct for an assignment node.
-struct Assign {
+struct Assign_c {
     String variable;
-    Action expression;
+    Action_c expression;
 
-    Assign() : variable(""), expression(0) {}
+    Assign_c() : variable(""), expression(0) {}
 
-    Assign(const String& v, const Action& e) : variable(v), expression(e) {}
+    Assign_c(const String& v, const Action_c& e) : variable(v), expression(e) {}
 
-    Assign(const Assign& other) : variable(other.variable), expression(other.expression) {}
+    Assign_c(const Assign_c& other) : variable(other.variable), expression(other.expression) {}
 };
 
 // Struct for a reassignment node.
-struct Reassign {
+struct Reassign_c {
     String variable;
-    Action expression;
+    Action_c expression;
 
-    Reassign() : variable(""), expression(0) {}
+    Reassign_c() : variable(""), expression(0) {}
 
-    Reassign(String v, Action e) : variable(v), expression(e) {}
+    Reassign_c(String v, Action_c e) : variable(v), expression(e) {}
 
-    Reassign(const Reassign& other) : variable(other.variable), expression(other.expression) {}
+    Reassign_c(const Reassign_c& other) : variable(other.variable), expression(other.expression) {}
 };
 
 #endif
