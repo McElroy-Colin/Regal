@@ -52,6 +52,8 @@ struct Variable {
     Variable() : variable("") {}
 
     Variable(String var) : variable(var) {}
+    
+    Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
 
     Variable(const Variable& other) : variable(other.variable) {}
 };
@@ -64,6 +66,10 @@ struct BinaryOperator {
     BinaryOperator() : op(Nothing), expression1(0), expression2(0) {}
 
     BinaryOperator(TokenKey op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
+
+    BinaryOperator(BinaryOperator&& other) noexcept : op(other.op),
+        expression1(std::move(other.expression1)),
+        expression2(std::move(other.expression2)) {}
 
     BinaryOperator(const BinaryOperator& other) : 
         op(other.op), expression1(other.expression1), 
@@ -79,6 +85,9 @@ struct Assign {
 
     Assign(const String& v, const Action& e) : variable(v), expression(e) {}
 
+    Assign(Assign&& other) : variable(std::move(other.variable)), 
+        expression(std::move(other.expression)) {}
+
     Assign(const Assign& other) : variable(other.variable), expression(other.expression) {}
 };
 
@@ -90,6 +99,9 @@ struct Reassign {
     Reassign() : variable(""), expression(0) {}
 
     Reassign(String v, Action e) : variable(v), expression(e) {}
+
+    Reassign(Reassign&& other) : variable(std::move(other.variable)), 
+        expression(std::move(other.expression)) {}
 
     Reassign(const Reassign& other) : variable(other.variable), expression(other.expression) {}
 };

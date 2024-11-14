@@ -53,7 +53,9 @@ struct Variable_c {
 
     Variable_c(String var) : variable(var) {}
 
-    Variable_c(const Variable_c& other) : Variable_c(other.variable) {}
+    Variable_c(Variable_c&& other) noexcept : variable(std::move(other.variable)) {}
+
+    Variable_c(const Variable_c& other) : variable(other.variable) {}
 };
 
 // Struct for a binary operator node.
@@ -64,6 +66,10 @@ struct BinaryOperator_c {
     BinaryOperator_c() : op(Nothing), expression1(0), expression2(0) {}
 
     BinaryOperator_c(TokenKey op, Action_c e1, Action_c e2) : op(op), expression1(e1), expression2(e2) {}
+
+    BinaryOperator_c(BinaryOperator_c&& other) noexcept : op(other.op),
+        expression1(std::move(other.expression1)),
+        expression2(std::move(other.expression2)) {}
 
     BinaryOperator_c(const BinaryOperator_c& other) : 
         op(other.op), expression1(other.expression1), 
@@ -79,6 +85,9 @@ struct Assign_c {
 
     Assign_c(const String& v, const Action_c& e) : variable(v), expression(e) {}
 
+    Assign_c(Assign_c&& other) : variable(std::move(other.variable)), 
+        expression(std::move(other.expression)) {}
+
     Assign_c(const Assign_c& other) : variable(other.variable), expression(other.expression) {}
 };
 
@@ -91,7 +100,11 @@ struct Reassign_c {
 
     Reassign_c(String v, Action_c e) : variable(v), expression(e) {}
 
+    Reassign_c(Reassign_c&& other) : variable(std::move(other.variable)), 
+        expression(std::move(other.expression)) {}
+
     Reassign_c(const Reassign_c& other) : variable(other.variable), expression(other.expression) {}
+
 };
 
 #endif

@@ -167,7 +167,7 @@ TokenList lex_string(String line) {
             string_index++;
         
         } else {
-            perror("Failed lexing.");
+            perror("Lexing failed.");
             exit(EXIT_FAILURE);
         }
     }

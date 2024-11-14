@@ -18,7 +18,7 @@ Action parse_primitive_expression(TokenList& token_list);
 Action parse_number_expression(TokenList& token_list);
 Action parse_variable_expression(TokenList& token_list);
 
-// Anonymous namespce containing parsing helper functions.
+// Anonymous namespace containing parsing helper functions.
 namespace {
 
 //  Return true if the first element of the given list is the given token.
