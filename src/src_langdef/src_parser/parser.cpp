@@ -88,7 +88,7 @@ namespace {
 
 // The AST generator consists of recursive functions that correspond to nonterminals in the Regal CFG.
 // All functions return Actions corresponding to nodes of the AST. 
-// The Action definition can be found in ./parser.hpp
+// The Action definition can be found in ~/include/inc_parser/parser.hpp
 
 // Generate and return an AST of Actions from a list of tokens.
 Action parse_line(TokenList& token_list) {
@@ -113,7 +113,6 @@ Action parse_let_statement(TokenList& token_list) {
     Action expression;
     Token variable_token;
     String variable;
-
 
     match_bypass(token_list, Let); // Bypass 'let'
 
@@ -219,10 +218,7 @@ Action parse_additive_expression(TokenList& token_list) {
 //      Bypass and store the Additive Expression after '+' or '-'.
         additive_expression = parse_additive_expression(token_list);
 
-//      Ensure that the operator is additive.        
-        if ((operator_key == Plus) || (operator_key == Minus)) {
-            return std::make_shared<BinaryOperator>(operator_key, multiplicative_expression, additive_expression);
-        }
+        return std::make_shared<BinaryOperator>(operator_key, multiplicative_expression, additive_expression);
         
         perror("Parsing failed.");
         exit(EXIT_FAILURE);
@@ -251,10 +247,7 @@ Action parse_multiplicative_expression(TokenList& token_list) {
 //      Bypass and store the Multiplicative Expression after '*' or '/'.
         multiplicative_expression = parse_multiplicative_expression(token_list);
 
-//      Ensure that the operator is multiplicative.
-        if ((operator_key == Mult) || (operator_key == Div)) {
-            return std::make_shared<BinaryOperator>(operator_key, exponential_expression, multiplicative_expression);
-        }
+        return std::make_shared<BinaryOperator>(operator_key, exponential_expression, multiplicative_expression);
 
         perror("Parsing failed.");
         exit(EXIT_FAILURE);
