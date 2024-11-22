@@ -1,87 +1,95 @@
-/*
+
 #include "../parser_testing/parser_copy.hpp"
 #include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
 
-bool type_mismatch_c(Action_c& action1, Action_c& action2) {
-    return action1.index() != action2.index();
-}
+// Anonymous namespace containing optimization helper functions.
+namespace {
 
-bool incompatible_type_c(Action_c& action, std::vector<size_t> types) {
-    for (int i = 0; i < types.size(); i++) {
-        if (types[i] == action.index()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-int int_exp_c(int base, int exp) {
-    if (exp == 0) {
-        return 1;
-    } else if (exp < 0) {
-        perror("Integer exponential must use a nonnegative exponent.");
-        exit(EXIT_FAILURE);
+//  Check that given actions are of different types.
+    bool type_mismatch_c(Action_c& action1, Action_c& action2) {
+        return action1.index() != action2.index();
     }
 
-    auto rec_power = [](auto self, int b, int e) -> int {
-        if (e == 1) {
-            return b;
+
+//  Check that the given action is none of the given types.
+    bool incompatible_type_c(Action_c& action, std::vector<size_t> types) {
+        for (int i = 0; i < types.size(); i++) {
+            if (types[i] == action.index()) {
+                return false;
+            }
         }
-        return b * self(self, b, e - 1);
-    };
-
-    return rec_power(rec_power, base, exp);
-}
-
-
-bool evaluate_primitive_c(Action_c& action, VarMap& var_stack, VarData& action_value) {
-    if (action.index() == 0) { // Integer
-        std::shared_ptr<Integer_c> int_action = std::move(std::get<std::shared_ptr<Integer_c>>(action));
-        int num = int_action->number;
-
-        action_value = num;
-
-        return true;
-    } else if (action.index() == 1) { // Variable
-        std::shared_ptr<Variable_c> var_action = std::move(std::get<std::shared_ptr<Variable_c>>(action));
-        String variable = var_action->variable;
-
-        action_value = var_stack.at(variable);
-
         return true;
     }
-    return false;
+
+
+//  Calculate the exponent with integer base and exponent.
+    int int_exp_c(int base, int exp) {
+        if (exp == 0) {
+            return 1;
+        } else if (exp < 0) {
+            perror("Integer exponential must use a nonnegative exponent.");
+            exit(EXIT_FAILURE);
+        }
+
+        auto rec_power = [](auto self, int b, int e) -> int {
+            if (e == 1) {
+                return b;
+            }
+            return b * self(self, b, e - 1);
+        };
+
+        return rec_power(rec_power, base, exp);
+    }
+
 }
 
 
+// Optimize a given action down to its necessary components. Update the given action to a presumably smaller tree structure. 
+// Return true if the action was optimized, meaning the given action was not a primitive.
 bool optimize_action_c(Action_c& action, VarMap& var_stack) {
-    if (action.index() == 0) { // Integer
+    if (std::holds_alternative<std::shared_ptr<Integer_c>>(action)) { // Integer
+        return false;
+
+    } else if (std::holds_alternative<std::shared_ptr<Variable_c>>(action)) { // Variable
+        std::shared_ptr<Variable_c> var_action = std::move(std::get<std::shared_ptr<Variable_c>>(action));
+        String variable = std::move(var_action->variable);
+
+//      Locate the givn variable in the stack.
+        auto iter = var_stack.find(variable);
+        if (iter == var_stack.end()) {
+            perror("Variable not initialized");
+            exit(EXIT_FAILURE);
+        }
+
+//      Update action to the variable's stored value.
+        action = iter->second;
+
         return true;
 
-    } else if (action.index() == 1) { // Variable
-        return true;
-
-    } else if (action.index() == 2) { // BinaryOperator
-        std::shared_ptr<BinaryOperator_c> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator_c>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<BinaryOperator>>(action)) { // BinaryOperator
+        std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
 
         TokenKey current_op = binary_op->op;
 
+//      Optimize each side of the operator.
         Action_c current_expr1 = std::move(binary_op->expression1);
         Action_c current_expr2 = std::move(binary_op->expression2);
-        
         optimize_action_c(current_expr1, var_stack);
         optimize_action_c(current_expr2, var_stack);
 
+//      Ensure that the expression match in type and are compatible with their operator.
         if ((type_mismatch_c(current_expr1, current_expr2)) || (incompatible_type_c(current_expr1, number_types))) {
-            perror("");
+            perror("Incompatible types in binary operator");
             exit(EXIT_FAILURE);
         }
         
-        if (current_expr1.index() == 0) { // Integer
-            std::shared_ptr<Integer_c> int1 = std::get<std::shared_ptr<Integer_c>>(current_expr1);
-            std::shared_ptr<Integer_c> int2 = std::get<std::shared_ptr<Integer_c>>(current_expr2);
+//      Evaluate based on what type the expressions are.
+        if (std::holds_alternative<std::shared_ptr<Integer_c>>(current_expr1)) { // Integer
+            std::shared_ptr<Integer_c> int1 = std::move(std::get<std::shared_ptr<Integer_c>>(current_expr1));
+            std::shared_ptr<Integer_c> int2 = std::move(std::get<std::shared_ptr<Integer_c>>(current_expr2));
             
+//          Update action with the evaluated operaton.
             switch (current_op) {
                 case Plus:
                     action = std::make_shared<Integer_c>(int1->number + int2->number);
@@ -94,7 +102,7 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        perror("");
+                        perror("Division by zero");
                         exit(EXIT_FAILURE);
                     }
 
@@ -103,19 +111,26 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
                 case Exp:
                     action = std::make_shared<Integer_c>(int_exp_c(int1->number, int2->number));
                     return true;
+                default:
+                    perror("Binary operator not using a valid operator");
+                    exit(EXIT_FAILURE);
             }
+        } else {
+            perror("Optimization failed");
+            exit(EXIT_FAILURE);
         }
-    } else if (action.index() == 3) { // Assign
-            VarData var_value;
+    // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
+    } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
+        optimize_action_c(std::get<std::shared_ptr<Assign>>(action)->expression, var_stack);
             
-            std::shared_ptr<Assign_c> assignment = std::move(std::get<std::shared_ptr<Assign_c>>(action));
-            Action_c expr = assignment->expression;
-            optimize_action_c(expr, var_stack);
-            evaluate_primitive_c(expr, var_stack, var_value);
-
-            var_stack[assignment->variable] = var_value;
+        return true;
+    } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Reassign
+        optimize_action_c(std::get<std::shared_ptr<Reassign>>(action)->expression, var_stack);
             
-            return true;
+        return true;
+        
+    } else {
+        perror("Optimization failed.");
+        exit(EXIT_FAILURE);
     }
 }
-*/

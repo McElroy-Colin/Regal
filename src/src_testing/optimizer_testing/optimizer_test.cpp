@@ -11,8 +11,9 @@
 
 
 int main() {
-    String line = "let x = 4 * 2";
+    String line = "let x = 4 * y + (2 - 3 ** y)";
     VarMap stack;
+    //stack["y"] = std::make_shared<Integer>(2);
 
     TokenList tokens = lex_string(line);
     Action parsed = parse_line(tokens);
