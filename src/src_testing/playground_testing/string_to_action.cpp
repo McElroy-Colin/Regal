@@ -7,3 +7,6 @@
 #include "../../src_langdef/src_optimizer/optimizer.cpp"
 
 
+int main() {
+    return 0;
+}
