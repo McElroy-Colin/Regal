@@ -53,7 +53,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
         std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
         String variable = std::move(var_action->variable);
 
-//      Locate the givn variable in the stack.
+//      Locate the given variable in the stack.
         auto iter = var_stack.find(variable);
         if (iter == var_stack.end()) {
             perror("Variable not initialized");
