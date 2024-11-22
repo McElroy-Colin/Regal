@@ -16,7 +16,7 @@ int main() {
 
     TokenList tokens = lex_string(line);
     Action parsed = parse_line(tokens);
-
+/*
     TokenList tokens_new = lex_string(line);
     Action_c parsed_new = parse_line_c(tokens_new);
 
@@ -28,6 +28,7 @@ int main() {
 
     auto new_length = std::chrono::duration_cast<std::chrono::nanoseconds>(new_end - new_start).count();
 
+*/
 
     auto orig_start = std::chrono::high_resolution_clock::now();
     optimize_action(parsed, stack);
@@ -37,7 +38,7 @@ int main() {
 
 
     std::cout << "\nOriginal: " << orig_length << " ns\n" << std::endl;
-    std::cout << "\nNew: " << new_length << " ns\n" << std::endl;
+//    std::cout << "\nNew: " << new_length << " ns\n" << std::endl;
 
     return 0;
 }

@@ -9,8 +9,7 @@
 
 using String = std::string;
 
-using VarData = std::variant<int, String>;
-using VarMap = std::map<String, VarData>;
+using VarMap = std::map<String, Action>;
 
 std::vector<size_t> number_types = {
     0 /* Integer */

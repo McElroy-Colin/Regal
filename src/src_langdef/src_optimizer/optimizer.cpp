@@ -4,7 +4,6 @@
 // Anonymous namespace containing optimization helper functions.
 namespace {
 
-
     bool type_mismatch(Action& action1, Action& action2) { // work on how to type check variables
         return action1.index() != action2.index();
     }
@@ -41,34 +40,19 @@ namespace {
 }
 
 
-bool evaluate_primitive(Action& action, VarMap& var_stack, VarData& action_value) {
-    if (action.index() == 0) { // Integer
-        std::shared_ptr<Integer> int_action = std::move(std::get<std::shared_ptr<Integer>>(action));
-        int num = int_action->number;
-
-        action_value = num;
-
+bool optimize_action(Action& action, VarMap& var_stack) {
+    if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
         return true;
-    } else if (action.index() == 1) { // Variable
+
+    } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) { // Variable
         std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
         String variable = std::move(var_action->variable);
 
-        action_value = var_stack.at(variable);
+        action = var_stack.at(variable);
 
         return true;
-    }
-    return false;
-}
 
-
-bool optimize_action(Action& action, VarMap& var_stack) {
-    if (action.index() == 0) { // Integer
-        return true;
-
-    } else if (action.index() == 1) { // Variable
-        return true;
-
-    } else if (action.index() == 2) { // BinaryOperator
+    } else if (std::holds_alternative<std::shared_ptr<BinaryOperator>>(action)) { // BinaryOperator
         std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
 
         TokenKey current_op = binary_op->op;
@@ -80,11 +64,11 @@ bool optimize_action(Action& action, VarMap& var_stack) {
         optimize_action(current_expr2, var_stack);
 
         if ((type_mismatch(current_expr1, current_expr2)) || (incompatible_type(current_expr1, number_types))) { // doesn't work with variables
-            perror("");
+            perror("Incompatible types in binary operator.");
             exit(EXIT_FAILURE);
         }
         
-        if (current_expr1.index() == 0) { // Integer
+        if (std::holds_alternative<std::shared_ptr<Integer>>(current_expr1)) { // Integer
             std::shared_ptr<Integer> int1 = std::get<std::shared_ptr<Integer>>(current_expr1);
             std::shared_ptr<Integer> int2 = std::get<std::shared_ptr<Integer>>(current_expr2);
             
@@ -100,7 +84,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        perror("");
+                        perror("Division by zero.");
                         exit(EXIT_FAILURE);
                     }
 
@@ -114,17 +98,18 @@ bool optimize_action(Action& action, VarMap& var_stack) {
             perror("Optimization failed.");
             exit(EXIT_FAILURE);
         }
-    } else if (action.index() == 3) { // Assign
-            VarData var_value;
+    } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
+        std::shared_ptr<Assign> assignment = std::move(std::get<std::shared_ptr<Assign>>(action));
+        Action expr = std::move(assignment->expression);
+        optimize_action(expr, var_stack);
             
-            std::shared_ptr<Assign> assignment = std::move(std::get<std::shared_ptr<Assign>>(action));
-            Action expr = std::move(assignment->expression);
-            optimize_action(expr, var_stack);
-            evaluate_primitive(expr, var_stack, var_value);
-
-            var_stack[assignment->variable] = var_value;
+        return true;
+    } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Reassign
+        std::shared_ptr<Reassign> reassignment = std::move(std::get<std::shared_ptr<Reassign>>(action));
+        Action expr = std::move(reassignment->expression);
+        optimize_action(expr, var_stack);
             
-            return true;
+        return true;
     } else {
         perror("Optimization failed.");
         exit(EXIT_FAILURE);

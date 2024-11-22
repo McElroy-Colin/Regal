@@ -1,3 +1,4 @@
+/*
 #include "../parser_testing/parser_copy.hpp"
 #include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
@@ -117,3 +118,4 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
             return true;
     }
 }
+*/

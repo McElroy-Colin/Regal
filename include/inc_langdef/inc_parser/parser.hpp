@@ -21,12 +21,12 @@ struct Nothing;
 
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
 using Action = std::variant<
-    std::shared_ptr<Integer>, // 0
-    std::shared_ptr<Variable>, // 1
-    std::shared_ptr<BinaryOperator>, // 2
-    std::shared_ptr<Assign>, // 3
-    std::shared_ptr<Reassign>, // 4
-    OtherNodes, // 5
+    std::shared_ptr<Integer>, 
+    std::shared_ptr<Variable>, 
+    std::shared_ptr<BinaryOperator>, 
+    std::shared_ptr<Assign>, 
+    std::shared_ptr<Reassign>, 
+    OtherNodes, 
     int
 >;
 
