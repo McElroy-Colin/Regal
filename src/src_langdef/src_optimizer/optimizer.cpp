@@ -76,7 +76,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
         optimize_action(current_expr1, var_stack);
         optimize_action(current_expr2, var_stack);
 
-//      Ensure that the expression match in type and are compatible with their operator.
+//      Ensure that the expressions match in type and are compatible with their operator.
         if ((type_mismatch(current_expr1, current_expr2)) || (incompatible_type(current_expr1, number_types))) {
             perror("Incompatible types in binary operator");
             exit(EXIT_FAILURE);
@@ -87,7 +87,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
             std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(current_expr1));
             std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(current_expr2));
             
-//          Update action with the evaluated operaton.
+//          Update action with the evaluated operation.
             switch (current_op) {
                 case Plus:
                     action = std::make_shared<Integer>(int1->number + int2->number);
