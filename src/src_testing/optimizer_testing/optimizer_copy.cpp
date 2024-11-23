@@ -2,7 +2,7 @@
 #include "../parser_testing/parser_copy.hpp"
 #include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
-
+/*
 // Anonymous namespace containing optimization helper functions.
 namespace {
 
@@ -134,3 +134,4 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
         exit(EXIT_FAILURE);
     }
 }
+*/

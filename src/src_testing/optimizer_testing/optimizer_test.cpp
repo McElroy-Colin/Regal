@@ -12,10 +12,11 @@
 
 int main() {
     String line = "let x = 4 * y + (2 - 3 ** y)";
+    TokenList tokens;
     VarMap stack;
     //stack["y"] = std::make_shared<Integer>(2);
 
-    TokenList tokens = lex_string(line);
+    lex_string(line, tokens);
     Action parsed = parse_line(tokens);
 /*
     TokenList tokens_new = lex_string(line);
