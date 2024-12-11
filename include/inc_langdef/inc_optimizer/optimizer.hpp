@@ -2,12 +2,10 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "../inc_parser/parser.hpp"
+#include "../langdef.hpp"
 
 #ifndef EVALUATOR_HPP
 #define EVALUATOR_HPP
-
-using String = std::string;
 
 using VarMap = std::map<String, Action>;
 

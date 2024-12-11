@@ -53,8 +53,8 @@ namespace {
 
             return;
         } else {
-            perror("Parsing failed");
-            exit(EXIT_FAILURE);
+            std::cerr << "Parsing failed" << std::endl;
+            throw std::exception();
         }
     }
 
@@ -66,8 +66,8 @@ namespace {
 
             return;
         } else {
-            perror("Parsing failed");
-            exit(EXIT_FAILURE);
+            std::cerr << "Parsing failed" << std::endl;
+            throw std::exception();
         }
     }
 
@@ -79,8 +79,8 @@ namespace {
             
             return;
         } else {
-            perror("Parsing failed");
-            exit(EXIT_FAILURE);
+            std::cerr << "Parsing failed" << std::endl;
+            throw std::exception();
         }
     }
 
@@ -103,8 +103,8 @@ Action_c parse_keyword_statement_c(TokenList& token_list) {
     } else if (lookahead_c(token_list, Now)) {
         return parse_now_statement_c(token_list);
     } else {
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
 }
 
@@ -160,8 +160,8 @@ Action_c parse_expression_c(TokenList& token_list) {
     } else if (lookahead_c(token_list, Nothing)) {
         return parse_nothing_expression_c(token_list);
     } else {
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
 }
 
@@ -172,8 +172,8 @@ Action_c parse_base_expression_c(TokenList& token_list) {
             lookahead_c(token_list, LeftPar)) {
         return parse_math_expression_c(token_list);
     } else {
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
 }
 
@@ -191,8 +191,8 @@ Action_c parse_math_expression_c(TokenList& token_list) {
             lookahead_c(token_list, LeftPar)) {
         return parse_additive_expression_c(token_list);
     } else {
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
 }
 
@@ -224,8 +224,8 @@ Action_c parse_additive_expression_c(TokenList& token_list) {
             return std::make_shared<BinaryOperator_c>(operator_key, multiplicative_expression, additive_expression);
         }
 
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
     
     return multiplicative_expression;
@@ -256,8 +256,8 @@ Action_c parse_multiplicative_expression_c(TokenList& token_list) {
             return std::make_shared<BinaryOperator_c>(operator_key, exponential_expression, multiplicative_expression);
         }
         
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
     
     return exponential_expression;
@@ -305,8 +305,8 @@ Action_c parse_primitive_expression_c(TokenList& token_list) {
 
         return expression;
     } else {
-        perror("Parsing failed.");
-        exit(EXIT_FAILURE);
+        perror("Parsing failed");
+        throw std::exception();
     }
 }
 
@@ -327,8 +327,8 @@ Action_c parse_number_expression_c(TokenList& token_list) {
             number = std::get<int>(number_token[1]);
             return std::make_shared<Integer_c>(number);
         default:
-            perror("Parsing failed.");
-            exit(EXIT_FAILURE);        
+            perror("Parsing failed");
+            throw std::exception();        
     }
 }
 

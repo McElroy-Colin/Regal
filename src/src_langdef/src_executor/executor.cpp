@@ -1,4 +1,4 @@
-#include "../../../include/inc_langdef/inc_parser/parser.hpp"
+#include "../../../include/inc_langdef/langdef.hpp"
 #include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
 
@@ -16,7 +16,7 @@ bool execute_action(Action& action, VarMap& var_stack) {
         var_stack[var_action->variable] = var_action->expression;
 
         return true;
-    } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Assign
+    } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Reassign
         std::shared_ptr<Reassign> var_action = std::move(std::get<std::shared_ptr<Reassign>>(action));
         execute_action(var_action->expression, var_stack);
 
@@ -25,6 +25,6 @@ bool execute_action(Action& action, VarMap& var_stack) {
         return true;
     } else {
         perror("Optimization failed.");
-        exit(EXIT_FAILURE);
+        throw std::exception();
     }
 }
