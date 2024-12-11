@@ -8,6 +8,7 @@
 #include <typeindex>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP
@@ -17,7 +18,6 @@ enum ReturnValue {
 };
 
 using String = std::string;
-using IntArray = std::vector<int>;
 
 // Enum for all tokens in Regal.
 enum TokenKey {
@@ -41,17 +41,108 @@ enum TokenKey {
     Nothing
 };
 
+// Store the display string of the given token.
+//      token: token to display (input)
+//      display: display string of the token (output)
+//      subset: true if the token represents a subset (input)
+void display_token(const TokenKey token, String& display, const bool subset = false) {
+    switch (token) {
+        case TokenKey::Let:
+            if (subset) {
+                display = "<keywords>";
+            } else {
+                display = "let";
+            }
+            break;
+
+        case TokenKey::Now:
+            if (subset) {
+                display = "<keywords>";
+            } else {
+                display = "now";
+            }
+            break;
+
+        case TokenKey::Int:
+            if (subset) {
+                display = "<number>";
+            } else {
+                display = "<integer>";
+            }
+            break;
+
+        case TokenKey::Plus:
+            if (subset) {
+                display = "<additive operator>";
+            } else {
+                display = "+";
+            }
+            break;
+
+        case TokenKey::Minus:
+            if (subset) {
+                display = "<additive operator>";
+            } else {
+                display = "-";
+            }
+            break;
+
+        case TokenKey::Mult:
+            if (subset) {
+                display = "<multiplicative operator>";
+            } else {
+                display = "*";
+            }
+            break;
+
+        case TokenKey::Div:
+            if (subset) {
+                display = "<multiplicative operator>";
+            } else {
+                display = "/";
+            }
+            break;
+
+        case TokenKey::Exp:
+            display = "**";
+            break;
+
+        case TokenKey::Var:
+            display = "<variable>";
+            break;
+
+        case TokenKey::Bind:
+            display = "=";
+            break;
+
+        case TokenKey::LeftPar:
+            display = "(";
+            break;
+
+        case TokenKey::RightPar:
+            display = ")";
+            break;
+
+        case TokenKey::Nothing:
+            display = "nothing";
+            break;
+
+        default:
+            display = "<UNKNWON TOKEN>";
+    }
+
+    return;
+}
+
+
 // Useful subsets of tokens.
-using TokenKeyArray = std::vector<TokenKey>;
-TokenKeyArray keyword_tokens = {Let, Now};
-TokenKeyArray number_tokens = {Int};
-TokenKeyArray additive_tokens = {Plus, Minus};
-TokenKeyArray multiplicative_tokens = {Mult, Div};
+std::vector<TokenKey> keyword_tokens = {Let, Now};
+std::vector<TokenKey> number_tokens = {Int};
+std::vector<TokenKey> additive_tokens = {Plus, Minus};
+std::vector<TokenKey> multiplicative_tokens = {Mult, Div};
 
 // Token aliases.
 using Token = std::vector<std::variant<TokenKey, int, String>>;
-using TokenArray = std::vector<Token>;
-using TokenList = std::list<Token>;
 
 // AST node definitions.
 struct Integer;

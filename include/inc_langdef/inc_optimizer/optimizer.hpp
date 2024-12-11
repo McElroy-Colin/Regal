@@ -7,8 +7,7 @@
 #ifndef EVALUATOR_HPP
 #define EVALUATOR_HPP
 
-using VarMap = std::map<String, Action>;
-
+// TODO: this is bad, dont want to manually update this when i add more actions
 std::vector<size_t> number_types = {
     0 /* Integer */
 };

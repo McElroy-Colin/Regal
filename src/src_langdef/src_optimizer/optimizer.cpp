@@ -1,17 +1,23 @@
+// File containing Regal optimization and type-checking functions.
+
 #include "../../../include/inc_langdef/inc_optimizer/optimizer.hpp"
 
 
 // Anonymous namespace containing optimization helper functions.
 namespace {
 
-//  Check that given actions are of different types.
-    bool type_mismatch(Action& action1, Action& action2) {
+//  Return true if the given actions are of different types.
+//      action1: first action to compare (input)
+//      action2: second action to compare (input)
+    bool type_mismatch(const Action& action1, const Action& action2) {
         return action1.index() != action2.index();
     }
 
 
-//  Check that the given action is none of the given types.
-    bool incompatible_type(Action& action, std::vector<size_t>& types) {
+//  Return true if the given action is non of the given types.
+//      action: action to compare (input)
+//      types: types to check the action for (input)
+    bool incompatible_type(const Action& action, const std::vector<size_t>& types) {
         for (int i = 0; i < types.size(); i++) {
             if (types[i] == action.index()) {
                 return false;
@@ -22,13 +28,16 @@ namespace {
 
 
 //  Calculate the exponent with integer base and exponent.
+//      base: integer base (input)
+//      exp: integer exponent to apply to base (input)
     int int_exp(int base, int exp) {
         if (exp == 0) {
             return 1;
         } else if (exp < 0) {
-            throw std::runtime_error("Integer exponential must use a nonnegative exponent");
+            throw std::runtime_error("integer exponential must use a nonnegative exponent");
         }
 
+//      Lambda expression to recursively calculate the exponential.
         auto rec_power = [](auto self, int b, int e) -> int {
             if (e == 1) {
                 return b;
@@ -44,7 +53,9 @@ namespace {
 
 // Optimize a given action down to its necessary components. Update the given action to a presumably smaller tree structure. 
 // Return true if the action was optimized, meaning the given action was not a primitive.
-bool optimize_action(Action& action, VarMap& var_stack) {
+//      action: action to be updated and optimized (input)
+//      var_stack: stack containing initialized variables (input)
+bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
     if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
         return false;
 
@@ -55,7 +66,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
 //      Locate the given variable in the stack.
         auto iter = var_stack.find(variable);
         if (iter == var_stack.end()) {
-            String error_msg = "Variable \'" + variable + "\' not initialized";
+            String error_msg = "variable \'" + variable + "\' not initialized";
             throw std::runtime_error(error_msg);
         }
 
@@ -77,7 +88,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
 
 //      Ensure that the expressions match in type and are compatible with their operator.
         if ((type_mismatch(current_expr1, current_expr2)) || (incompatible_type(current_expr1, number_types))) {
-            throw std::runtime_error("Incompatible types in binary operator");
+            throw std::runtime_error("incompatible types in binary operator");
         }
         
 //      Evaluate based on what type the expressions are.
@@ -98,7 +109,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        throw std::runtime_error("Optimizing failed");
+                        throw std::runtime_error("optimizing failed");
                     }
 
                     action = std::make_shared<Integer>(int1->number / int2->number); // Returns truncated division
@@ -107,10 +118,10 @@ bool optimize_action(Action& action, VarMap& var_stack) {
                     action = std::make_shared<Integer>(int_exp(int1->number, int2->number));
                     return true;
                 default:
-                    throw std::runtime_error("Binary operator not using a valid operator");
+                    throw std::runtime_error("binary operator not using a valid operator");
             }
         } else {
-            throw std::runtime_error("Optimizing failed");
+            throw std::runtime_error("optimizing failed");
         }
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
     } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
@@ -123,6 +134,6 @@ bool optimize_action(Action& action, VarMap& var_stack) {
         return true;
         
     } else {
-        throw std::runtime_error("Optimizing failed");
+        throw std::runtime_error("optimizing failed");
     }
 }

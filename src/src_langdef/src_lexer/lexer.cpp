@@ -2,6 +2,7 @@
 
 #include "../../../include/inc_langdef/langdef.hpp"
 
+
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {
 
@@ -11,7 +12,9 @@ namespace {
 
 //  Match sequential whitespace characters in the given string starting at the given index. 
 //  Return the index succeeding the final whitespace character.
-    int match_whitespace(String& line, int string_index) {
+//      line: the line of code (input)
+//      string_index: the first index to match with whitespace (input)
+    int match_whitespace(const String& line, const int string_index) {
         int whitespace_index;
 
         for (whitespace_index = string_index; is_whitespace(line[whitespace_index]); whitespace_index++);
@@ -19,9 +22,12 @@ namespace {
     }
 
 //  Match sequential integer characters in the given string starting at the given index.
-//  Store both the index succeeding the final integer character and the described integer in a vector.
-//      This function assumes that the first character at the given index is a number.
-    void match_integer(String& line, int string_index, IntArray& integer_token) {
+//  Store both the index succeeding the final integer character and the described integer.
+//  This function assumes that the first character at the given index is a number.
+//      line: the line of code (input)
+//      string_index: the first index to match with integers (input)
+//      integer_token: the index succeeding the matched integer and the integer value (output)
+    void match_integer(String& line, const int string_index, std::vector<int>& integer_token) {
         int integer_index, integer_value;
 
         for (integer_index = string_index; is_integer(line[integer_index]); integer_index++);
@@ -31,9 +37,12 @@ namespace {
     }
 
 //  Match a custom variable label in the given string at the given index.
-//  Store both the index succeeding the label and the label text in a variant vector.
-//      This function assumes that the first character at the given index is a label but not a number.
-    void match_label(String& line, int string_index, Token& label_token) {
+//  Store both the index succeeding the label and the label text.
+//  This function assumes that the first character at the given index is a label but not a number.
+//      line: the line of code (input)
+//      string_index: the first index to match with a label (input)
+//      label_token: the index succeeding the matched label and the label string (output)
+    void match_label(String& line, const int string_index, Token& label_token) {
         String label;
         int label_index;
 
@@ -46,7 +55,10 @@ namespace {
 //  Match the given target string to the given line starting at the given index.
 //  Return the index succeeding the target if matched or the original given index if not matched, 
 //  returned index also succeeds any following whitespace if the given boolean is true.
-    int match_token(String& line, String target, int string_index, bool end_in_whitespace) {
+//      line: the line of code (input)
+//      string_index: the first index to match with a token (input)
+//      end_in_whitespace: true if the matched token should be succeeded by whitespace (input)
+    int match_token(const String& line, const String& target, const int string_index, const bool end_in_whitespace) {
         int word_index;
 
         for (word_index = string_index; line[word_index] 
@@ -66,7 +78,9 @@ namespace {
 
 // Lex a string into a list of Regal syntax tokens.
 // Stores a list of arrays, with each array containing the token enum value and any additional necessary data.
-void lex_string(String& line, TokenList& token_list) {
+//      line: the line of code to lex (input)
+//      token_list: list of tokens from the given line (output)
+void lex_string(String& line, std::list<Token>& token_list) {
     int string_index = 0;
     int matched_index;
 
@@ -79,7 +93,7 @@ void lex_string(String& line, TokenList& token_list) {
             string_index = match_whitespace(line, string_index); // bypass whitespace characters
 
         } else if (is_integer(line[string_index])) {
-            IntArray position_integer; 
+            std::vector<int> position_integer; 
             match_integer(line, string_index, position_integer);
             Token token = { Int, position_integer[1] }; // include the integer value in the token vector
 
@@ -119,59 +133,78 @@ void lex_string(String& line, TokenList& token_list) {
             token_list.push_back(token);
             string_index += 2;
         
-        } else if (line[string_index] == '=') {
-            Token token = { Bind };
-
-            token_list.push_back(token);
-            string_index++;
-        
-        } else if (line[string_index] == '+') {
-            Token token = { Plus };
-
-            token_list.push_back(token);
-            string_index++;
-        
-        } else if (line[string_index] == '-') {
-            if (is_integer(line[string_index + 1])) {
-                IntArray position_integer;
-                match_integer(line, ++string_index, position_integer);
-                Token token = { Int, -position_integer[1] };
-
-                token_list.push_back(token);
-                string_index = position_integer[0];
-            } else {
-                Token token = { Minus };
-
-                token_list.push_back(token);
-                string_index++;
-            }
-
-        } else if (line[string_index] == '/') {
-            Token token = { Div };
-
-            token_list.push_back(token);
-            string_index++;
-        
-        } else if (line[string_index] == '*') {
-            Token token = { Mult };
-
-            token_list.push_back(token);
-            string_index++;
-        
-        } else if (line[string_index] == '(') {
-            Token token = { LeftPar };
-
-            token_list.push_back(token);
-            string_index++;
-        
-        } else if (line[string_index] == ')') {
-            Token token = { RightPar };
-
-            token_list.push_back(token);
-            string_index++;
-        
         } else {
-            throw std::runtime_error("Lexing failed");
+//          Switch statement for single character tokens.
+            switch (line[string_index]) {
+                case '=': {
+                    Token token = { Bind };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                case '+': {
+                    Token token = { Plus };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                case '-': {
+                    if (is_integer(line[string_index + 1])) {
+                        std::vector<int> position_integer;
+                        match_integer(line, ++string_index, position_integer);
+                        Token token = { Int, -position_integer[1] };
+
+                        token_list.push_back(token);
+                        string_index = position_integer[0];
+                    } else {
+                        Token token = { Minus };
+
+                        token_list.push_back(token);
+                        string_index++;
+                    }
+
+                    break;
+                }
+                case '/': {
+                    Token token = { Div };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                case '*': {
+                    Token token = { Mult };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                case '(': {
+                    Token token = { LeftPar };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                case ')': {
+                    Token token = { RightPar };
+
+                    token_list.push_back(token);
+                    string_index++;
+                    break;
+                }
+                default:
+                    int prblm_token_index = string_index;
+
+//                  Identify the problematic token.
+                    while (!is_whitespace(line[prblm_token_index])) { prblm_token_index++; }
+                    const String problem_token = line.substr(string_index, prblm_token_index - string_index);
+
+                    const String error_msg = "token \'" + problem_token + "\' not recognized";
+                    throw std::runtime_error(error_msg);
+            }
         }
     }
 

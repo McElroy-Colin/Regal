@@ -1,4 +1,4 @@
-Context-Free Grammar that dictates order of syntax in Regal
+Context-Free Grammar that dictates order of syntax in Regal WIP updated version
 
     - At least one whitespace character must separate certain tokens.
         - Tokens that use special symbols (e.g. '+' or '**' or '=') do not need
