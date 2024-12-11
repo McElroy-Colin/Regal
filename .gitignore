@@ -47,6 +47,7 @@
 *.su
 *.idb
 *.pdb
+tempCodeRunnerFile.cpp
 
 # Kernel Module Compile Results
 *.mod*

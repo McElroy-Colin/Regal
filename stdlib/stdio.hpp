@@ -1,6 +1,4 @@
 #include "../include/inc_langdef/langdef.hpp"
-#include <iostream>
-#include <type_traits>
 
 
 // Converts a piece of primitive data to a string.
@@ -11,8 +9,7 @@ String _to_string(const Action& action) {
         integer->_disp(result);
         return result;
     } else {
-        perror("Cannot print undisplayable data.");
-        throw std::exception();
+        throw std::runtime_error("Cannot print undisplayable data");
     }
     
 }

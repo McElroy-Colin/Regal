@@ -54,7 +54,7 @@ namespace {
             return;
         } else {
             std::cerr << "Parsing failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error();;
         }
     }
 
@@ -67,7 +67,7 @@ namespace {
             return;
         } else {
             std::cerr << "Parsing failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error();;
         }
     }
 
@@ -80,7 +80,7 @@ namespace {
             return;
         } else {
             std::cerr << "Parsing failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error();;
         }
     }
 
@@ -104,7 +104,7 @@ Action_c parse_keyword_statement_c(TokenList& token_list) {
         return parse_now_statement_c(token_list);
     } else {
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 
@@ -161,7 +161,7 @@ Action_c parse_expression_c(TokenList& token_list) {
         return parse_nothing_expression_c(token_list);
     } else {
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 
@@ -173,7 +173,7 @@ Action_c parse_base_expression_c(TokenList& token_list) {
         return parse_math_expression_c(token_list);
     } else {
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 
@@ -192,7 +192,7 @@ Action_c parse_math_expression_c(TokenList& token_list) {
         return parse_additive_expression_c(token_list);
     } else {
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 
@@ -225,7 +225,7 @@ Action_c parse_additive_expression_c(TokenList& token_list) {
         }
 
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
     
     return multiplicative_expression;
@@ -257,7 +257,7 @@ Action_c parse_multiplicative_expression_c(TokenList& token_list) {
         }
         
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
     
     return exponential_expression;
@@ -306,7 +306,7 @@ Action_c parse_primitive_expression_c(TokenList& token_list) {
         return expression;
     } else {
         perror("Parsing failed");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 
@@ -328,7 +328,7 @@ Action_c parse_number_expression_c(TokenList& token_list) {
             return std::make_shared<Integer_c>(number);
         default:
             perror("Parsing failed");
-            throw std::exception();        
+            throw std::runtime_error();;        
     }
 }
 

@@ -171,8 +171,7 @@ void lex_string(String& line, TokenList& token_list) {
             string_index++;
         
         } else {
-            std::cerr << "Lexing failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error("Lexing failed");
         }
     }
 

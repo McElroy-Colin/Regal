@@ -26,8 +26,7 @@ namespace {
         if (exp == 0) {
             return 1;
         } else if (exp < 0) {
-            perror("Integer exponential must use a nonnegative exponent.");
-            throw std::exception();
+            throw std::runtime_error("Integer exponential must use a nonnegative exponent");
         }
 
         auto rec_power = [](auto self, int b, int e) -> int {
@@ -56,8 +55,8 @@ bool optimize_action(Action& action, VarMap& var_stack) {
 //      Locate the given variable in the stack.
         auto iter = var_stack.find(variable);
         if (iter == var_stack.end()) {
-            std::cerr << "Variable \'" << variable << "\' not initialized" << std::endl;
-            throw std::exception();
+            String error_msg = "Variable \'" + variable + "\' not initialized";
+            throw std::runtime_error(error_msg);
         }
 
 //      Update action to the variable's stored value.
@@ -78,8 +77,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
 
 //      Ensure that the expressions match in type and are compatible with their operator.
         if ((type_mismatch(current_expr1, current_expr2)) || (incompatible_type(current_expr1, number_types))) {
-            std::cerr << "Incompatible types in binary operator" << std::endl;
-            throw std::exception();
+            throw std::runtime_error("Incompatible types in binary operator");
         }
         
 //      Evaluate based on what type the expressions are.
@@ -100,8 +98,7 @@ bool optimize_action(Action& action, VarMap& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        std::cerr << "Division by zero" << std::endl;
-                        throw std::exception();
+                        throw std::runtime_error("Optimizing failed");
                     }
 
                     action = std::make_shared<Integer>(int1->number / int2->number); // Returns truncated division
@@ -110,12 +107,10 @@ bool optimize_action(Action& action, VarMap& var_stack) {
                     action = std::make_shared<Integer>(int_exp(int1->number, int2->number));
                     return true;
                 default:
-                    std::cerr << "Binary operator not using a valid operator" << std::endl;
-                    throw std::exception();
+                    throw std::runtime_error("Binary operator not using a valid operator");
             }
         } else {
-            std::cerr << "Optimization failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error("Optimizing failed");
         }
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
     } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
@@ -128,7 +123,6 @@ bool optimize_action(Action& action, VarMap& var_stack) {
         return true;
         
     } else {
-        std::cerr << "Optimization failed" << std::endl;
-        throw std::exception();
+        throw std::runtime_error("Optimizing failed");
     }
 }

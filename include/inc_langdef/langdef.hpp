@@ -7,6 +7,7 @@
 #include <memory>
 #include <typeindex>
 #include <iostream>
+#include <stdexcept>
 
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP

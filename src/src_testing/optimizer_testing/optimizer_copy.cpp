@@ -29,7 +29,7 @@ namespace {
             return 1;
         } else if (exp < 0) {
             perror("Integer exponential must use a nonnegative exponent.");
-            throw std::exception();
+            throw std::runtime_error();;
         }
 
         auto rec_power = [](auto self, int b, int e) -> int {
@@ -59,7 +59,7 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
         auto iter = var_stack.find(variable);
         if (iter == var_stack.end()) {
             perror("Variable not initialized");
-            throw std::exception();
+            throw std::runtime_error();;
         }
 
 //      Update action to the variable's stored value.
@@ -81,7 +81,7 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
 //      Ensure that the expression match in type and are compatible with their operator.
         if ((type_mismatch_c(current_expr1, current_expr2)) || (incompatible_type_c(current_expr1, number_types))) {
             perror("Incompatible types in binary operator");
-            throw std::exception();
+            throw std::runtime_error();;
         }
         
 //      Evaluate based on what type the expressions are.
@@ -103,7 +103,7 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
                 case Div: 
                     if (int2->number == 0) {
                         perror("Division by zero");
-                        throw std::exception();
+                        throw std::runtime_error();;
                     }
 
                     action = std::make_shared<Integer_c>(int1->number / int2->number);
@@ -113,11 +113,11 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
                     return true;
                 default:
                     perror("Binary operator not using a valid operator");
-                    throw std::exception();
+                    throw std::runtime_error();;
             }
         } else {
             std::cerr << "Optimization failed" << std::endl;
-            throw std::exception();
+            throw std::runtime_error();;
         }
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
     } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
@@ -131,7 +131,7 @@ bool optimize_action_c(Action_c& action, VarMap& var_stack) {
         
     } else {
         perror("Optimization failed.");
-        throw std::exception();
+        throw std::runtime_error();;
     }
 }
 */

@@ -25,6 +25,6 @@ bool execute_action(Action& action, VarMap& var_stack) {
         return true;
     } else {
         perror("Optimization failed.");
-        throw std::exception();
+        throw std::runtime_error("Execution failed");
     }
 }
