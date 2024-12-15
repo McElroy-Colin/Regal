@@ -120,8 +120,11 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
             if (it == stack.end()) {
                 String error_msg = "variable \'" + var + "\' not initialized";
                 _display_error(curr_line, error_msg, line_pos, suffix_length);
+
                 line_number -= 1;
                 line_pos -= 1;
+
+                errored = true;
             } else {
                 _clear_next_rows(4);
                 _move_cursor(line_pos, suffix_length + 1);

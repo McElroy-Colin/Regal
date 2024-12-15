@@ -81,17 +81,23 @@ namespace {
 //      line: the line of code to lex (input)
 //      token_list: list of tokens from the given line (output)
 void lex_string(String& line, std::list<Token>& token_list) {
-    int string_index = 0;
     int matched_index;
+    int string_index = 0;
+    int close_expr = 0;
+    int unary_additives = 1;
 
     while (string_index < line.size()) {
-
         if (line[string_index] == '\n') {
             return; // end lexing at the end of a line
 
         } else if (is_whitespace(line[string_index])) {
             string_index = match_whitespace(line, string_index); // bypass whitespace characters
+            unary_additives += 1;
 
+//          Whitespace doesn't progress towards closing an expression.
+            if (close_expr > 0) {
+                close_expr += 1;
+            }
         } else if (is_integer(line[string_index])) {
             std::vector<int> position_integer; 
             match_integer(line, string_index, position_integer);
@@ -131,6 +137,8 @@ void lex_string(String& line, std::list<Token>& token_list) {
             Token token = { Exp };
 
             token_list.push_back(token);
+            unary_additives = 2;
+
             string_index += 2;
         
         } else {
@@ -140,30 +148,36 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     Token token = { Bind };
 
                     token_list.push_back(token);
+                    unary_additives = 2;
+
                     string_index++;
                     break;
                 }
+//              Treat additive operators differently if they are in a unary state.
                 case '+': {
-                    Token token = { Plus };
+                    if (unary_additives == 0) {
+                        Token token = { Plus };
+                        token_list.push_back(token);
+                        unary_additives = 2;
+                    }
 
-                    token_list.push_back(token);
                     string_index++;
+
                     break;
                 }
                 case '-': {
-                    if (is_integer(line[string_index + 1])) {
-                        std::vector<int> position_integer;
-                        match_integer(line, ++string_index, position_integer);
-                        Token token = { Int, -position_integer[1] };
-
-                        token_list.push_back(token);
-                        string_index = position_integer[0];
-                    } else {
-                        Token token = { Minus };
-
-                        token_list.push_back(token);
-                        string_index++;
+//                  '-<token>' is the same as '+(-1*<token>) if it is not unary.
+                    if (unary_additives == 0) {
+                        token_list.push_back({ Plus });
                     }
+
+                    token_list.push_back({ LeftPar });
+                    token_list.push_back({ Int, -1 });
+                    token_list.push_back({ Mult });
+
+                    close_expr = 2;
+
+                    string_index++;
 
                     break;
                 }
@@ -171,6 +185,8 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     Token token = { Div };
 
                     token_list.push_back(token);
+                    unary_additives = 2;
+
                     string_index++;
                     break;
                 }
@@ -178,6 +194,8 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     Token token = { Mult };
 
                     token_list.push_back(token);
+                    unary_additives = 2;
+
                     string_index++;
                     break;
                 }
@@ -205,6 +223,19 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     const String error_msg = "token \'" + problem_token + "\' not recognized";
                     throw std::runtime_error(error_msg);
             }
+        }
+
+//      If a non-operator is lexed, additive operators are no longer unary.
+        if (unary_additives > 0) {
+            unary_additives -= 1;
+        }
+
+//      Close the current expression or decrement towards closing it.
+        if (close_expr == 1) {
+            token_list.push_back({ RightPar });
+            close_expr = 0;
+        } else if (close_expr > 0) {
+            close_expr -= 1;
         }
     }
 
