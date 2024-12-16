@@ -4,6 +4,10 @@
 *.vscode
 *.json
 
+# python structures
+tempCodeRunnerFile.py
+playground_env/
+
 # Prerequisites
 *.d
 
