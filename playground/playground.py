@@ -4,44 +4,57 @@ from tkinter import scrolledtext
 import subprocess
 from tkinter import font
 
-def update_line_numbers(event=None):
-    content = text_input.get("1.0", "end-1c")
-    lines = content.splitlines()
-    
-    new_content = "\n".join([f"{i+1}> {line}" for i, line in enumerate(lines)])
-    
-    text_input.delete("1.0", "end")
-    text_input.insert("1.0", new_content)
+def _init_window(screen_ratio):
+    window = tk.Tk()
+    window.title("Regal Playground")
+
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+
+    window_width = int(screen_width * screen_ratio)
+    window_height = int(screen_height * screen_ratio)
+
+    window_xpos = (screen_width - window_width) // 2
+    window_ypos = (screen_height - window_height) // 2
+
+    window.geometry(f"{window_width}x{window_height}+{window_xpos}+{window_ypos}")
+
+    window.resizable(True, True)
+
+    return window, window_width, window_height
 
 
 
-window_bg = "#5A5858"
+def _init_linenumbers(linenum_frame, bg, text_color, num_lines):
+    linenum_str = "> "
+    for i in range(1, num_lines + 1):
+        curr_linenum = tk.Label(linenum_frame, text = str(i) + linenum_str, width = len(linenum_str) + 1, bg = bg, fg = text_color, anchor = "w")
+        curr_linenum.pack()
+
+def _init_text_frame(window, window_dim, bg, fg, font):
+    num_width = -1
+    for i in range(10):
+        curr_width = font.measure(str(i))
+
+        if num_width < curr_width or num_width == -1:
+            num_width = curr_width
+
+    linenum_width = num_width * 3 + font.measure(">  ")
+
+    linenum_frame = tk.Frame(window, width = linenum_width, height = int(window_dim[1] * 0.7))
+    linenum_frame.pack(side = "top", anchor = "nw")
+
+    _init_linenumbers(linenum_frame, bg = bg, text_color = fg, num_lines = 10)
 
 
-window = tk.Tk()
-window.title("Regal Playground")
 
-screen_width = window.winfo_screenwidth()
-screen_height = window.winfo_screenheight()
+def init_playground(screen_ratio = 0.8, text_bg = "#5A5858", text_color = "white", text_font = "Arial", text_size = 12):
+    window, width, height = _init_window(screen_ratio)
 
-window_width = int(screen_width * 0.8)
-window_height = int(screen_height * 0.8)
+    font_obj = font.Font(family = text_font, size = text_size)
+    _init_text_frame(window, window_dim = (width, height), bg = text_bg, fg = text_color, font = font_obj)
 
-window_xpos = (screen_width - window_width) // 2
-window_ypos = (screen_height - window_height) // 2
+    window.mainloop()
 
-window.geometry(f"{window_width}x{window_height}+{window_xpos}+{window_ypos}")
 
-window.resizable(True, True)
-
-text_frame = tk.Frame(window)
-text_frame.place(relwidth = 0.7, relheight = 0.8)
-
-text_input = tk.Text(text_frame, font = ("Helvetica", 12), wrap = tk.WORD, bg = window_bg, fg = "white")
-text_input.pack(fill = tk.BOTH, expand = True)
-
-text_input.bind("<KeyRelease>", update_line_numbers())
-
-text_input.focus_set()
-
-window.mainloop()
+init_playground()
