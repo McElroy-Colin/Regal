@@ -83,8 +83,6 @@ namespace {
 void lex_string(String& line, std::list<Token>& token_list) {
     int matched_index;
     int string_index = 0;
-    int close_expr = 0;
-    int unary_additives = 1;
 
     while (string_index < line.size()) {
         if (line[string_index] == '\n') {
@@ -92,12 +90,7 @@ void lex_string(String& line, std::list<Token>& token_list) {
 
         } else if (is_whitespace(line[string_index])) {
             string_index = match_whitespace(line, string_index); // bypass whitespace characters
-            unary_additives += 1;
 
-//          Whitespace doesn't progress towards closing an expression.
-            if (close_expr > 0) {
-                close_expr += 1;
-            }
         } else if (is_integer(line[string_index])) {
             std::vector<int> position_integer; 
             match_integer(line, string_index, position_integer);
@@ -107,21 +100,15 @@ void lex_string(String& line, std::list<Token>& token_list) {
             string_index = position_integer[0];
 
         } else if ((matched_index = match_token(line, "let", string_index, true)) > string_index) {
-            Token token = { Let };
-
-            token_list.push_back(token);
+            token_list.push_back({ Let });
             string_index = matched_index;
 
         } else if ((matched_index = match_token(line, "now", string_index, true)) > string_index) {
-            Token token = { Now };
-
-            token_list.push_back(token);
+            token_list.push_back({ Now });
             string_index = matched_index;
 
         } else if ((matched_index = match_token(line, "nothing", string_index, true)) > string_index) {
-            Token token = { Nothing };
-
-            token_list.push_back(token);
+            token_list.push_back({ Nothing });
             string_index = matched_index;
 
 //      Assume this label starts with a letter or '_' since the same index was checked for an integer already.
@@ -134,10 +121,7 @@ void lex_string(String& line, std::list<Token>& token_list) {
             string_index = std::get<int>(position_label[0]);
         
         } else if (match_token(line, "**", string_index, false) > string_index) {
-            Token token = { Exp };
-
-            token_list.push_back(token);
-            unary_additives = 2;
+            token_list.push_back({ Exp });
 
             string_index += 2;
         
@@ -145,75 +129,41 @@ void lex_string(String& line, std::list<Token>& token_list) {
 //          Switch statement for single character tokens.
             switch (line[string_index]) {
                 case '=': {
-                    Token token = { Bind };
-
-                    token_list.push_back(token);
-                    unary_additives = 2;
-
+                    token_list.push_back({ Bind });
                     string_index++;
                     break;
                 }
-//              Treat additive operators differently if they are in a unary state.
                 case '+': {
-                    if (unary_additives == 0) {
-                        Token token = { Plus };
-                        token_list.push_back(token);
-                        unary_additives = 2;
-                    }
-
+                    token_list.push_back({ Plus });
                     string_index++;
-
                     break;
                 }
                 case '-': {
-//                  '-<token>' is the same as '+(-1*<token>) if it is not unary.
-                    if (unary_additives == 0) {
-                        token_list.push_back({ Plus });
-                    }
-
-                    token_list.push_back({ LeftPar });
-                    token_list.push_back({ Int, -1 });
-                    token_list.push_back({ Mult });
-
-                    close_expr = 2;
-
+                    token_list.push_back({ Minus });
                     string_index++;
-
                     break;
                 }
                 case '/': {
-                    Token token = { Div };
-
-                    token_list.push_back(token);
-                    unary_additives = 2;
-
+                    token_list.push_back({ Div });
                     string_index++;
                     break;
                 }
                 case '*': {
-                    Token token = { Mult };
-
-                    token_list.push_back(token);
-                    unary_additives = 2;
-
+                    token_list.push_back({ Mult });
                     string_index++;
                     break;
                 }
                 case '(': {
-                    Token token = { LeftPar };
-
-                    token_list.push_back(token);
+                    token_list.push_back({ LeftPar });
                     string_index++;
                     break;
                 }
                 case ')': {
-                    Token token = { RightPar };
-
-                    token_list.push_back(token);
+                    token_list.push_back({ RightPar });
                     string_index++;
                     break;
                 }
-                default:
+                default: {
                     int prblm_token_index = string_index;
 
 //                  Identify the problematic token.
@@ -222,22 +172,11 @@ void lex_string(String& line, std::list<Token>& token_list) {
 
                     const String error_msg = "token \'" + problem_token + "\' not recognized";
                     throw std::runtime_error(error_msg);
+                }
             }
-        }
-
-//      If a non-operator is lexed, additive operators are no longer unary.
-        if (unary_additives > 0) {
-            unary_additives -= 1;
-        }
-
-//      Close the current expression or decrement towards closing it.
-        if (close_expr == 1) {
-            token_list.push_back({ RightPar });
-            close_expr = 0;
-        } else if (close_expr > 0) {
-            close_expr -= 1;
         }
     }
 
     return;
+
 }

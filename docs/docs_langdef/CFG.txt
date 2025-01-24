@@ -19,13 +19,11 @@ LetStatement -> 'let' '<var>' '=' Expression
 NowStatement -> 'now' '<var>' '=' Expression
     <var> is a custom variable name
 
-Expression -> KeywordStatement | BaseExpr | NothingExpr
+Expression -> KeywordStatement | BaseExpr
 
-BaseExpr -> MathExpr
+BaseExpr ->  'nothing' | AdditiveExpr
 
 NothingExpr -> 'nothing'
-
-MathExpr -> AdditiveExpr
 
 AdditiveExpr -> MultiplicativeExpr '<add_op>' AdditiveExpr | MultiplicativeExpr
     <add_op> is any of the additive subset of the primitive operators.
@@ -33,12 +31,14 @@ AdditiveExpr -> MultiplicativeExpr '<add_op>' AdditiveExpr | MultiplicativeExpr
 MultiplicativeExpr -> ExponentialExpr '<mult_op>' MultiplicativeExpr | ExponentialExpr
     <mult_op> is any of the multiplicative subset of the primitive operators.
 
-ExponentialExpr -> PrimitiveExpr '**' ExponentialExpr | PrimitiveExpr
+ExponentialExpr -> ValueExpr '**' ExponentialExpr | ValueExpr
 
-PrimitiveExpr -> NumberExpr | VariableExpr | '('Expression')'
+ValueExpr -> PrimitiveExpr | '-'PrimitiveExpr
 
-NumberExpr -> '<integer>'
-    <integer> is any integer
+PrimitiveExpr -> NumberExpr | VariableExpr | '('BaseExpr')'
 
 VariableExpr -> '<var>'
     <var> is a custom variable name
+
+NumberExpr -> '<integer>'
+    <integer> is any integer

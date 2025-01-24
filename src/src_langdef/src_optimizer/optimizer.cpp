@@ -61,12 +61,12 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
     } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) { // Variable
         std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
-        String variable = std::move(var_action->variable);
+        const String variable = std::move(var_action->variable);
 
 //      Locate the given variable in the stack.
         auto iter = var_stack.find(variable);
         if (iter == var_stack.end()) {
-            String error_msg = "variable \'" + variable + "\' not initialized";
+            const String error_msg = "variable \'" + variable + "\' not initialized";
             throw std::runtime_error(error_msg);
         }
 

@@ -89,7 +89,7 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
         Action code;
 
 //      Clear current line and read the next input.
-    _move_cursor(line_pos, 1);
+        _move_cursor(line_pos, 1);
         _clear_next_rows(1);
         std::cout << line_number << linenum_suffix;
         if (!std::getline(std::cin, curr_line)) {
@@ -127,13 +127,11 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
                 errored = true;
             } else {
                 _clear_next_rows(4);
-                _move_cursor(line_pos, suffix_length + 1);
-
-                std::cout << "\n" << String(suffix_length + 1, ' ');
+                _move_cursor(line_pos, 0);
+                std::cout << String(suffix_length + 1, ' ');
                 print(stack[var], "\033[32m");
-                std::cout << std::endl;
                 
-                line_pos += 3;
+                line_pos += 1;
             }
             
         } else if (curr_line == "clear") {

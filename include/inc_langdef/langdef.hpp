@@ -138,8 +138,6 @@ void display_token(const TokenKey token, String& display, const bool subset = fa
 // Useful subsets of tokens.
 std::vector<TokenKey> keyword_tokens = {Let, Now};
 std::vector<TokenKey> number_tokens = {Int};
-std::vector<TokenKey> additive_tokens = {Plus, Minus};
-std::vector<TokenKey> multiplicative_tokens = {Mult, Div};
 
 // Token aliases.
 using Token = std::vector<std::variant<TokenKey, int, String>>;
