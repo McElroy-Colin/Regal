@@ -1,6 +1,11 @@
+// Header file containing useful code for meta elements of compiler source code.
+
 #include "../inc_langdef/langdef.hpp"
 
-// Debug enum.
+#ifndef META_CODE_HPP
+#define META_CODE_HPP
+
+// Debug values.
 enum ReturnValue {
     FAILURE = -1,
 };
@@ -14,9 +19,10 @@ enum DisplayTokenOption {
 
 // Store the display string of the given token.
 //      token: token to display (input)
-//      display: display string of the token (output)
 //      disp_option: controls the display string for the given token (input)
-void display_token(Token& token, String& display, const DisplayTokenOption disp_option, const bool assignment_operator = true) {
+//      display: display string of the token (output)
+//      assignment_operator: true if '=' is used to assign variables not compare values (input)
+void display_token(const Token& token, const DisplayTokenOption disp_option, String& display, const bool assignment_operator = true) {
     const TokenKey token_key = std::get<TokenKey>(token[0]);
 
     switch (token_key) {
@@ -49,7 +55,7 @@ void display_token(Token& token, String& display, const DisplayTokenOption disp_
 
         case TokenKey::Bool:
             if (disp_option == Literal) {
-                bool b = std::get<bool>(token[1]);
+                bool b = std::get<int>(token[1]);
                 display = b ? "true" : "false";
             } else {
                 display = "<boolean>";
@@ -186,3 +192,13 @@ void display_token(Token& token, String& display, const DisplayTokenOption disp_
     return;
 }
 
+// Return value output overload of the above function.
+String display_token(const Token& token, const DisplayTokenOption disp_option, const bool assignment_operator = true) {
+    String result;
+
+    display_token(token, disp_option, result, assignment_operator);
+
+    return result;
+}
+
+#endif

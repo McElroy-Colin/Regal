@@ -7,7 +7,7 @@
 //   Entering 'clear' wipes current memory/assigned variables.
 
 
-#include "../include/inc_langdef/inc_optimizer/optimizer.hpp"
+#include "../include/inc_langdef/optimizer.hpp"
 #include "../include/inc_langdef/langdef.hpp"
 #include "../stdlib/stdio.hpp"
 

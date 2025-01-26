@@ -13,10 +13,6 @@
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP
 
-enum ReturnValue {
-    FAILURE = -1,
-};
-
 using String = std::string;
 
 // Enum for all tokens in Regal.
@@ -40,188 +36,6 @@ enum TokenKey {
 //  Nothing token
     Nothing
 };
-
-// AST node definitions.
-struct Integer;
-struct Boolean;
-struct Variable;
-struct UnaryOperator;
-struct BinaryOperator;
-struct Assign;
-struct Reassign;
-
-// Nodes that do not require a class/struct.
-enum OtherNodes {
-    ON_Nothing
-};
-
-// TODO: build a token display that takes data within a data storing token
-
-
-//          displayLiteral means 
-//          displayKey means '<number>')
-//          displaySubset means display the token's key name (e.g. 'let' is 'let', '4' is '<integer>')
-enum DisplayTokenOption {
-    displayLiteral, // display the token as input by the user (e.g. 'let' is 'let', '4' is '4')
-    displayKey, // display the set of tokens the token belongs to (e.g. 'let' is '<keyword>', '4' is 
-    displaySubset
-};
-
-// Store the display string of the given token.
-//      token: token to display (input)
-//      display: display string of the token (output)
-//      disp_option: controls the display string for the given token (input)
-
-void display_token(Token& token, String& display, const DisplayTokenOption disp_option = displayLiteral) {
-    const TokenKey token_key = std::get<TokenKey>(token[0]);
-
-    switch (token_key) {
-        case TokenKey::Let:
-            if (disp_option == 1) {
-                display = "<keyword>";
-            } else {
-                display = "let";
-            }
-            break;
-
-        case TokenKey::Now:
-            if (disp_option == 1) {
-                display = "<keyword>";
-            } else {
-                display = "now";
-            }
-            break;
-
-        case TokenKey::Int:
-            if (disp_option == 0) {
-                int num = std::get<int>(token[1]);
-
-                // finsih display function
-                
-            } else if (disp_option == 1) {
-                display = "<number>";
-            } else {
-                display = "<integer>";
-            }
-
-            if (disp_option == 1) {
-                display = "<number>";
-            } else {
-                display = "<integer>";
-            }
-            break;
-
-        case TokenKey::Bool:
-            display = "<boolean>";
-            break;
-
-        case TokenKey::Plus:
-            if (subset) {
-                display = "<additive operator>";
-            } else {
-                display = "+";
-            }
-            break;
-
-        case TokenKey::Minus:
-            if (subset) {
-                display = "<additive operator>";
-            } else {
-                display = "-";
-            }
-            break;
-
-        case TokenKey::Mult:
-            if (subset) {
-                display = "<multiplicative operator>";
-            } else {
-                display = "*";
-            }
-            break;
-
-        case TokenKey::Div:
-            if (subset) {
-                display = "<multiplicative operator>";
-            } else {
-                display = "/";
-            }
-            break;
-
-        case TokenKey::Exp:
-            display = "**";
-            break;
-        
-        case TokenKey::And:
-            if (subset) {
-                display = "<boolean operator>";
-            } else {
-                display = "&";
-            }
-            break;
-
-        case TokenKey::Or:
-            if (subset) {
-                display = "<boolean operator>";
-            } else {
-                display = "|";
-            }
-            break;
-
-        case TokenKey::Not:
-            if (subset) {
-                display = "<boolean operator>";
-            } else {
-                display = "!";
-            }
-            break;
-
-        case TokenKey::Greater:
-            if (subset) {
-                display = "<comparison operator>";
-            } else {
-                display = ">";
-            }
-            break;
-
-        case TokenKey::Less:
-            if (subset) {
-                display = "<comparison operator>";
-            } else {
-                display = "<";
-            }
-            break;
-
-        case TokenKey::Var:
-            display = "<variable>";
-            break;
-
-        case TokenKey::Equals:
-            if (subset) {
-                display = "<comparison operator";
-            } else {
-                display = "=";
-            }
-            break;
-
-        case TokenKey::LeftPar:
-            display = "(";
-            break;
-
-        case TokenKey::RightPar:
-            display = ")";
-            break;
-
-        case TokenKey::Nothing:
-            display = "nothing";
-            break;
-
-        default:
-            display = "<UNKNWON TOKEN>";
-    }
-
-    return;
-}
-
 
 // Useful subsets of tokens.
 std::vector<TokenKey> keyword_tokens = {Let, Now};
@@ -283,9 +97,7 @@ struct Boolean {
     Boolean(const Boolean& other) : boolean(other.boolean) {}
 
     void _disp(String& result) {
-        result = boolean
-            ? "true"
-            : "false";
+        result = boolean ? "true" : "false";
         return;
     }
 };
@@ -301,6 +113,11 @@ struct Variable {
     Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
 
     Variable(const Variable& other) : variable(other.variable) {}
+
+    void _disp(String& result) {
+        result = variable;
+        return;
+    }
 };
 
 // Struct for a unary operator node.

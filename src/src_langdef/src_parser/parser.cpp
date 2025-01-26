@@ -1,6 +1,7 @@
 // File containing the Regal AST generator.
 
 #include "../../../include/inc_langdef/langdef.hpp"
+#include "../../../include/inc_debug/error_handling.hpp"
 
 
 // parsing function definitions coded with the CFG.
@@ -35,24 +36,6 @@ Action parse_boolean_expression(std::list<Token>& token_list);
 
 // Anonymous namespace containing parsing helper functions.
 namespace {
-
-//  Throw an exception containing parsing error information.
-//      expected_key: token that should have appeared (input)
-//      received_key: token that appeared instead (input)
-//      exp_subset: true if the expected token represents a subset (input)
-//      end_of_line: true if there is no received token (input)
-    void _display_error(const TokenKey expected_key, const TokenKey received_key, const bool exp_subset = false, const bool end_of_line = false) {
-        String expected, received;
-
-        display_token(expected_key, expected, exp_subset);
-
-        const String error_msg = end_of_line 
-            ? "expected \'" + expected + "\' but line ended"
-            : "expected \'" + expected + "\' but got \'" + (display_token(received_key, received), received) + "\'";
-
-        throw std::runtime_error(error_msg);
-    }
-
 
 //  Return true if the first element of the given list is the given token.
 //      token_list: linked list of remaining tokens (input)
@@ -90,12 +73,11 @@ namespace {
 
             return;
         }
-        
-        if (token_list.empty()) {
-            _display_error(target_token, Nothing, false, true);
-        } else {
-            _display_error(target_token, std::get<TokenKey>(token_list.front()[0]));
-        }
+
+//      Handle incorrect token error.
+        token_list.empty() 
+            ? throw UnexpectedInputError(target_token, Literal) 
+            : throw UnexpectedInputError(token_list.front(), target_token, Literal);
     }
 
 //  Pop the first element of the given list and store it if it matches the given token.
@@ -110,11 +92,10 @@ namespace {
             return;
         }
 
-        if (token_list.empty()) {
-            _display_error(target_token, Nothing, false, true);
-        } else {
-            _display_error(target_token, std::get<TokenKey>(token_list.front()[0]));
-        }
+//      Handle incorrect token error.
+        token_list.empty() 
+            ? throw UnexpectedInputError(target_token, Literal) 
+            : throw UnexpectedInputError(token_list.front(), target_token, Literal);
     }
 
 //  Pop the first element of the given list and store it if it matches any of the given tokens.
@@ -129,11 +110,10 @@ namespace {
             return;
         }
 
-        if (token_list.empty()) {
-            _display_error(target_tokens[0], Nothing, true, true);
-        } else {
-            _display_error(target_tokens[0], std::get<TokenKey>(token_list.front()[0]), true, false);
-        }
+//      Handle incorrect token type error.
+        token_list.empty() 
+            ? throw UnexpectedInputError(target_tokens[0], Key) 
+            : throw UnexpectedInputError(token_list.front(), target_tokens[0], Key);
     }
 
 }
@@ -154,17 +134,11 @@ Action parse_line(std::list<Token>& token_list) {
         line = parse_implicit_assignment(token_list);
     }
 
-    if (!token_list.empty()) {
-        String token_disp;
-        TokenKey next_token = std::get<TokenKey>(token_list.front()[0]);
-        const String error_msg = "excess tokens starting at \'" + (display_token(next_token, token_disp), token_disp) + "\'";
-        throw std::runtime_error(error_msg);
-    }
+//  Handle if there are more tokens after parsing.
+    token_list.empty() ?: throw UnexpectedInputError(token_list.front(), Literal);
 
     return line;
 }
-
-// VARIABLE ASSIGNMENT:
 
 // Parse the assignment of a variable with an assignment keyword.
 //      token_list: linked list of remaining tokens (input)
@@ -173,9 +147,12 @@ Action parse_explicit_assignment(std::list<Token>& token_list) {
         return parse_let_statement(token_list);
     } else if (_lookahead(token_list, Now)) {
         return parse_now_statement(token_list);
-    } else {
-        throw std::runtime_error("line of code must start with a keyword");
     }
+
+//  Handle incorrect token type error.
+    token_list.empty() 
+        ? throw UnexpectedInputError({Let}, Subset) 
+        : throw UnexpectedInputError(token_list.front(), {Let}, Subset);
 }
 
 // Parse a 'let' assignment statement.
@@ -352,10 +329,9 @@ Action parse_additive_expression(std::list<Token>& token_list) {
     Action multiplicative_expression;
     std::vector<TokenKey> additive_tokens;
     
-//  Bypass and store the Multiplicative Expression before '+' or '-'.
+//  Parse and store the expression before '+' or '-'.
     multiplicative_expression = parse_multiplicative_expression(token_list);
 
-//  Check for '+' or '-'.
     additive_tokens = {Plus, Minus};
     if (_lookahead_any(token_list, additive_tokens)) {
         Token operator_token;
@@ -366,7 +342,7 @@ Action parse_additive_expression(std::list<Token>& token_list) {
         _query_bypass_any(token_list, additive_tokens, operator_token);
         operator_key = std::get<TokenKey>(operator_token[0]);
 
-//      Bypass and store the Additive Expression after '+' or '-'.
+//      Parse and store the expression after '+' or '-'.
         additive_expression = parse_additive_expression(token_list);
 
         return std::make_shared<BinaryOperator>(operator_key, multiplicative_expression, additive_expression);
@@ -381,10 +357,9 @@ Action parse_multiplicative_expression(std::list<Token>& token_list) {
     Action exponential_expression;
     std::vector<TokenKey> multiplicative_tokens;
     
-//  Bypass and store the Exponential Expression before '*' or '/'.
+//  Parse and store the expression before '*' or '/'.
     exponential_expression = parse_exponential_expression(token_list);
 
-//  Check for '*' or '/'.
     multiplicative_tokens = {Mult, Div};
     if (_lookahead_any(token_list, multiplicative_tokens)) {
         Token operator_token;
@@ -395,7 +370,7 @@ Action parse_multiplicative_expression(std::list<Token>& token_list) {
         _query_bypass_any(token_list, multiplicative_tokens, operator_token);
         operator_key = std::get<TokenKey>(operator_token[0]);
 
-//      Bypass and store the Multiplicative Expression after '*' or '/'.
+//      Parse and store the expression after '*' or '/'.
         multiplicative_expression = parse_multiplicative_expression(token_list);
 
         return std::make_shared<BinaryOperator>(operator_key, exponential_expression, multiplicative_expression);
@@ -409,17 +384,15 @@ Action parse_multiplicative_expression(std::list<Token>& token_list) {
 Action parse_exponential_expression(std::list<Token>& token_list) {
     Action minus_identifier_expression;
     
-//  Bypass and store the Value Expression before '**'.
+//  Parse and store the expression before '**'.
     minus_identifier_expression = parse_minus_identifier_expression(token_list);
 
-//  Check for '**'.
     if (_lookahead(token_list, Exp)) {
         Action exponential_expression;
 
-//      Bypass the exponential operator.
         _match_bypass(token_list, Exp);
 
-//      Bypass and store the Exponential Expression after '**'.
+//      Parse and store the expression after '**'.
         exponential_expression = parse_exponential_expression(token_list);
 
         return std::make_shared<BinaryOperator>(Exp, minus_identifier_expression, exponential_expression);
@@ -428,30 +401,30 @@ Action parse_exponential_expression(std::list<Token>& token_list) {
     return minus_identifier_expression;
 }
 
-// Parse a mathematical expression containing fundamental values.
+// Parse a mathematical expression potentially starting with a negation.
 //      token_list: linked list of remaining tokens (input)
 Action parse_minus_identifier_expression(std::list<Token>& token_list) {
-//  Check for a '-' attached to the value.
+//  Check for a '-' attached to the expression.
 //      e.g. '-(2+6)'
     if (_lookahead(token_list, Minus)) {
         Action primitive_expression;
 
-//      Bypass the minus sign.
         _match_bypass(token_list, Minus);
 
 //      Parse the expression that the '-' is attached to.
         primitive_expression = parse_primitive_expression(token_list);
 
-//      Multiply the subsequent expression by -1.
+//      Multiply the subsequent expression by -1 to simulate negation.
         return std::make_shared<BinaryOperator>(Mult, std::make_shared<Integer>(-1), primitive_expression);
     }
 
     return parse_primitive_expression(token_list);
 }
 
-// Parse a Primitive Expression.
+// Parse an expression with low-level values or encased expressions.
 //      token_list: linked list of remaining tokens (input)
 Action parse_primitive_expression(std::list<Token>& token_list) {
+//  Check for different low-level values.
     if (_lookahead(token_list, Var)) {
         Token variable_token;
         String variable;
@@ -469,27 +442,26 @@ Action parse_primitive_expression(std::list<Token>& token_list) {
     }
     Action or_expression;
 
-    _match_bypass(token_list, LeftPar); // Bypass '('
+    _match_bypass(token_list, LeftPar);
 
-//      Bypass and store the encased expression.
+//  Parse and store the encased expression.
     or_expression = parse_or_expression(token_list);
 
-    _match_bypass(token_list, RightPar); // Bypass ')'
+    _match_bypass(token_list, RightPar);
 
     return or_expression;
 }
 
-// Parse a Numeric Expression.
+// Parse an expression containing just a number token.
 //      token_list: linked list of remaining tokens (input)
 Action parse_number_expression(std::list<Token>& token_list) {
     Token number_token;
     TokenKey number_type;
     
-//  Bypass and identify the number type of the number token.
+//  Bypass and identify the type of number token.
     _query_bypass_any(token_list, number_tokens, number_token);
     number_type = std::get<TokenKey>(number_token[0]);
     
-//  Check the type of the number.
     switch (number_type) {
         case Int: // currently, only integers are supported in Regal.
             int number;
@@ -497,14 +469,17 @@ Action parse_number_expression(std::list<Token>& token_list) {
             number = std::get<int>(number_token[1]);
             return std::make_shared<Integer>(number);
         default:
-            throw std::runtime_error("parsing failed");        
+            throw FatalError("unrecognized number type in number expression");
     }
 }
 
+// Parse an expression containing just a boolean token.
+//      token_list: linked list of remaining tokens (input)
 Action parse_boolean_expression(std::list<Token>& token_list) {
     Token boolean_token;
     bool boolean_value;
 
+//  Bypass and store the boolean value.
     _query_bypass(token_list, Bool, boolean_token);
     boolean_value = std::get<int>(boolean_token[1]);
 

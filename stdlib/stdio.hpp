@@ -2,6 +2,9 @@
 
 #include "../include/inc_langdef/langdef.hpp"
 
+#ifndef STDIO_HPP
+#define STDIO_HPP
+
 
 // Anonymous namespace containing stdio helper functions.
 namespace {
@@ -40,3 +43,5 @@ void print(const Action& action, String prefix = "", String suffix = "\033[0m") 
 
     return;
 }
+
+#endif

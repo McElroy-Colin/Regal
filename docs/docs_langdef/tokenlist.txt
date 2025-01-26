@@ -1,5 +1,5 @@
 Accepted syntax in Regal
-
+    - Tokens with duplicate syntax are separated with ' / ' (e.g. '|' / 'or')
 
 All Unicode whitespace characters besides the newline character are ignored between tokens.
 
@@ -18,26 +18,20 @@ Declarative tokens:
 
     'now': Denotes the reassigment/retyping of an existing variable or function. (e.g. 'now x = true')
 
-    'if': Keyword that precedes a boolean and executes a block of code based on that boolean. //////////////////////////
-
     '=': Assigns the given variable/function label to the given expression.
 
 
 Value tokens:
 
-    Integers: Whole numbers that represent their value. (e.g. 3)
+    Integers: Signed whole numbers. Negative integers cannot have whitespace between 
+    the '-' and number characters. (e.g. '-3')
 
     'true': The boolean value True.
 
     'false': The boolean value False.
 
 
-Mathematical tokens:
-
-    Integers: Signed whole numbers. Negative integers cannot have whitespace between 
-    the '-' and number characters.
-
-    '**': Two asterisks denote an exponential relationship between numbers. (e.g. '2**3' is 2 to the 3rd power)
+Operator tokens:
 
     '+': Adds two numbers.
 
@@ -47,18 +41,26 @@ Mathematical tokens:
 
     '/': Divides two numbers and truncates any decimal digits.
 
+    '**': Two asterisks denote an exponential relationship between numbers. (e.g. '2**3' is 2 to the 3rd power)
+
+    '|' / 'or': Logical OR operation for two boolean values.
+
+    '&' / 'and': Logical AND operation for two boolean values.
+
+    '!' / 'not': Logical NOT operation for a boolean value.
+
     '>': Compares two values, returning true if the left value is "larger" than the right value.
 
     '<': Compares two values, returning true if the left value is "smaller" than the right value.
 
     '=': Compares two values for equality.
 
+
+Special tokens:
+
     '(': Denotes expression groupings to assign an order of operations to expressions.
 
     ')': Closes expression groupings.
-
-
-Special tokens:
 
     'nothing': The equivalent of 'NULL', 'nil', or '()' in other languages.
 
