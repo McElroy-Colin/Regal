@@ -25,14 +25,14 @@ enum TokenKey {
     Let, Now,
 
 //  Primitive data types
-    Int,
+    Int, Bool,
 
 //  Primitive Operators
-    Plus, Minus, Mult, Div, Exp,
+    Plus, Minus, Mult, Div, Exp, And, Or, Not, Greater, Less, /*Equals,*/ 
 
 //  Variables
     Var,
-    Bind,
+    Equals,
 
 //  Groupers
     LeftPar, RightPar,
@@ -41,34 +41,78 @@ enum TokenKey {
     Nothing
 };
 
+// AST node definitions.
+struct Integer;
+struct Boolean;
+struct Variable;
+struct UnaryOperator;
+struct BinaryOperator;
+struct Assign;
+struct Reassign;
+
+// Nodes that do not require a class/struct.
+enum OtherNodes {
+    ON_Nothing
+};
+
+// TODO: build a token display that takes data within a data storing token
+
+
+//          displayLiteral means 
+//          displayKey means '<number>')
+//          displaySubset means display the token's key name (e.g. 'let' is 'let', '4' is '<integer>')
+enum DisplayTokenOption {
+    displayLiteral, // display the token as input by the user (e.g. 'let' is 'let', '4' is '4')
+    displayKey, // display the set of tokens the token belongs to (e.g. 'let' is '<keyword>', '4' is 
+    displaySubset
+};
+
 // Store the display string of the given token.
 //      token: token to display (input)
 //      display: display string of the token (output)
-//      subset: true if the token represents a subset (input)
-void display_token(const TokenKey token, String& display, const bool subset = false) {
-    switch (token) {
+//      disp_option: controls the display string for the given token (input)
+
+void display_token(Token& token, String& display, const DisplayTokenOption disp_option = displayLiteral) {
+    const TokenKey token_key = std::get<TokenKey>(token[0]);
+
+    switch (token_key) {
         case TokenKey::Let:
-            if (subset) {
-                display = "<keywords>";
+            if (disp_option == 1) {
+                display = "<keyword>";
             } else {
                 display = "let";
             }
             break;
 
         case TokenKey::Now:
-            if (subset) {
-                display = "<keywords>";
+            if (disp_option == 1) {
+                display = "<keyword>";
             } else {
                 display = "now";
             }
             break;
 
         case TokenKey::Int:
-            if (subset) {
+            if (disp_option == 0) {
+                int num = std::get<int>(token[1]);
+
+                // finsih display function
+                
+            } else if (disp_option == 1) {
                 display = "<number>";
             } else {
                 display = "<integer>";
             }
+
+            if (disp_option == 1) {
+                display = "<number>";
+            } else {
+                display = "<integer>";
+            }
+            break;
+
+        case TokenKey::Bool:
+            display = "<boolean>";
             break;
 
         case TokenKey::Plus:
@@ -106,13 +150,57 @@ void display_token(const TokenKey token, String& display, const bool subset = fa
         case TokenKey::Exp:
             display = "**";
             break;
+        
+        case TokenKey::And:
+            if (subset) {
+                display = "<boolean operator>";
+            } else {
+                display = "&";
+            }
+            break;
+
+        case TokenKey::Or:
+            if (subset) {
+                display = "<boolean operator>";
+            } else {
+                display = "|";
+            }
+            break;
+
+        case TokenKey::Not:
+            if (subset) {
+                display = "<boolean operator>";
+            } else {
+                display = "!";
+            }
+            break;
+
+        case TokenKey::Greater:
+            if (subset) {
+                display = "<comparison operator>";
+            } else {
+                display = ">";
+            }
+            break;
+
+        case TokenKey::Less:
+            if (subset) {
+                display = "<comparison operator>";
+            } else {
+                display = "<";
+            }
+            break;
 
         case TokenKey::Var:
             display = "<variable>";
             break;
 
-        case TokenKey::Bind:
-            display = "=";
+        case TokenKey::Equals:
+            if (subset) {
+                display = "<comparison operator";
+            } else {
+                display = "=";
+            }
             break;
 
         case TokenKey::LeftPar:
@@ -144,7 +232,9 @@ using Token = std::vector<std::variant<TokenKey, int, String>>;
 
 // AST node definitions.
 struct Integer;
+struct Boolean;
 struct Variable;
+struct UnaryOperator;
 struct BinaryOperator;
 struct Assign;
 struct Reassign;
@@ -157,7 +247,9 @@ enum OtherNodes {
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
 using Action = std::variant<
     std::shared_ptr<Integer>, 
+    std::shared_ptr<Boolean>,
     std::shared_ptr<Variable>, 
+    std::shared_ptr<UnaryOperator>, 
     std::shared_ptr<BinaryOperator>, 
     std::shared_ptr<Assign>, 
     std::shared_ptr<Reassign>,
@@ -180,6 +272,24 @@ struct Integer {
     }
 };
 
+// Struct for a Boolean node.
+struct Boolean {
+    bool boolean;
+
+    Boolean() : boolean(false) {}
+
+    Boolean(bool b) : boolean(b) {}
+
+    Boolean(const Boolean& other) : boolean(other.boolean) {}
+
+    void _disp(String& result) {
+        result = boolean
+            ? "true"
+            : "false";
+        return;
+    }
+};
+
 // Struct for a Variable node.
 struct Variable {
     String variable;
@@ -191,6 +301,22 @@ struct Variable {
     Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
 
     Variable(const Variable& other) : variable(other.variable) {}
+};
+
+// Struct for a unary operator node.
+struct UnaryOperator {
+    TokenKey op;
+    Action expression;
+
+    UnaryOperator() : op(Nothing), expression() {}
+
+    UnaryOperator(TokenKey op, Action e) : op(op), expression(e) {}
+
+    UnaryOperator(UnaryOperator&& other) noexcept : op(other.op),
+        expression(std::move(other.expression)) {}
+
+    UnaryOperator(const UnaryOperator& other) : 
+        op(other.op), expression(other.expression) {}
 };
 
 // Struct for a binary operator node.
@@ -230,15 +356,16 @@ struct Assign {
 struct Reassign {
     String variable;
     Action expression;
+    bool implicit;
 
-    Reassign() : variable(""), expression() {}
+    Reassign() : variable(""), expression(), implicit(false) {}
 
-    Reassign(String v, Action e) : variable(v), expression(e) {}
+    Reassign(String v, Action e, bool i) : variable(v), expression(e), implicit(i) {}
 
     Reassign(Reassign&& other) : variable(std::move(other.variable)), 
-        expression(std::move(other.expression)) {}
+        expression(std::move(other.expression)), implicit(other.implicit) {}
 
-    Reassign(const Reassign& other) : variable(other.variable), expression(other.expression) {}
+    Reassign(const Reassign& other) : variable(other.variable), expression(other.expression), implicit(other.implicit) {}
 };
 
 #endif

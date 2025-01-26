@@ -6,27 +6,6 @@
 // Anonymous namespace containing optimization helper functions.
 namespace {
 
-//  Return true if the given actions are of different types.
-//      action1: first action to compare (input)
-//      action2: second action to compare (input)
-    bool type_mismatch(const Action& action1, const Action& action2) {
-        return action1.index() != action2.index();
-    }
-
-
-//  Return true if the given action is non of the given types.
-//      action: action to compare (input)
-//      types: types to check the action for (input)
-    bool incompatible_type(const Action& action, const std::vector<size_t>& types) {
-        for (int i = 0; i < types.size(); i++) {
-            if (types[i] == action.index()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
 //  Calculate the exponent with integer base and exponent.
 //      base: integer base (input)
 //      exp: integer exponent to apply to base (input)
@@ -50,6 +29,7 @@ namespace {
 
 }
 
+// TODO: convert it to a switch statement for optimization
 
 // Optimize a given action down to its necessary components. Update the given action to a presumably smaller tree structure. 
 // Return true if the action was optimized, meaning the given action was not a primitive.
@@ -57,6 +37,8 @@ namespace {
 //      var_stack: stack containing initialized variables (input)
 bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
     if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
+        return false;
+    } else if (std::holds_alternative<std::shared_ptr<Boolean>>(action)) { // Boolean
         return false;
 
     } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) { // Variable
@@ -75,6 +57,30 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
         return true;
 
+    } else if (std::holds_alternative<std::shared_ptr<UnaryOperator>>(action)) { // UnaryOperator
+        std::shared_ptr<UnaryOperator> unary_op = std::move(std::get<std::shared_ptr<UnaryOperator>>(action));
+
+        TokenKey current_op = unary_op->op;
+
+        Action current_expr = std::move(unary_op->expression);
+        optimize_action(current_expr, var_stack);
+
+        if (std::holds_alternative<std::shared_ptr<Boolean>>(current_expr)) { // Boolean
+            std::shared_ptr<Boolean> bool_expr = std::move(std::get<std::shared_ptr<Boolean>>(current_expr));
+
+            switch (current_op) {
+                case Not:
+                    action = std::make_shared<Boolean>(!(bool_expr->boolean));
+                    return true;
+                default:
+                    String op_string;
+                    const String error_msg = "boolean using \'" + (display_token(current_op, op_string, false), op_string) + "\' as an operator";
+                    throw std::runtime_error(error_msg);
+            }
+        } else {
+            throw std::runtime_error("unary operator undefined type");
+        }
+
     } else if (std::holds_alternative<std::shared_ptr<BinaryOperator>>(action)) { // BinaryOperator
         std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
 
@@ -86,9 +92,9 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         optimize_action(current_expr1, var_stack);
         optimize_action(current_expr2, var_stack);
 
-//      Ensure that the expressions match in type and are compatible with their operator.
-        if ((type_mismatch(current_expr1, current_expr2)) || (incompatible_type(current_expr1, number_types))) {
-            throw std::runtime_error("incompatible types in binary operator");
+//      Ensure that the expressions match in type.
+        if (type_mismatch(current_expr1, current_expr2)) {
+            throw std::runtime_error("binary operator mismatched types");
         }
         
 //      Evaluate based on what type the expressions are.
@@ -109,7 +115,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        throw std::runtime_error("optimizing failed");
+                        throw std::runtime_error("division by zero");
                     }
 
                     action = std::make_shared<Integer>(int1->number / int2->number); // Returns truncated division
@@ -117,12 +123,40 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 case Exp:
                     action = std::make_shared<Integer>(int_exp(int1->number, int2->number));
                     return true;
+                case Greater:
+                    action = std::make_shared<Boolean>(int1->number > int2->number);
+                    return true;
+                case Less:
+                    action = std::make_shared<Boolean>(int1->number < int2->number);
+                    return true;
+                case Equals:
+                    action = std::make_shared<Boolean>(int1->number == int2->number);
+                    return true;
                 default:
-                    throw std::runtime_error("binary operator not using a valid operator");
+                    String op_string;
+                    const String error_msg = "integers using \'" + (display_token(current_op, op_string, false), op_string) + "\' as an operator";
+                    throw std::runtime_error(error_msg);
+            }
+        } else if (std::holds_alternative<std::shared_ptr<Boolean>>(current_expr1)) { // Boolean
+            std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(current_expr1));
+            std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(current_expr2));
+
+            switch(current_op){
+                case Or:
+                    action = std::make_shared<Boolean>(bool1 ->boolean || bool2->boolean);
+                    return true;
+                case And:
+                    action = std::make_shared<Boolean>(bool1 ->boolean && bool2->boolean);
+                    return true;
+                default:
+                    String op_string;
+                    const String error_msg = "booleans using \'" + (display_token(current_op, op_string, false), op_string) + "\' as an operator";
+                    throw std::runtime_error(error_msg);
             }
         } else {
-            throw std::runtime_error("optimizing failed");
+            throw std::runtime_error("binary operator undefined type");
         }
+
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
     } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
         optimize_action(std::get<std::shared_ptr<Assign>>(action)->expression, var_stack);
@@ -132,7 +166,6 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         optimize_action(std::get<std::shared_ptr<Reassign>>(action)->expression, var_stack);
             
         return true;
-        
     } else {
         throw std::runtime_error("optimizing failed");
     }

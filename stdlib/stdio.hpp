@@ -6,13 +6,18 @@
 // Anonymous namespace containing stdio helper functions.
 namespace {
 
+// TODO: use OO paradigm to not have an if statement for all data types
+
 //  Converts a piece of primitive data to a string and stores it.
 //      action: data to conver to string (input)
 //      converted: string representation of data (output)
     void _to_string(const Action& action, String& converted) {
         if (std::holds_alternative<std::shared_ptr<Integer>>(action)) {
-            auto integer = std::get<std::shared_ptr<Integer>>(action);
+            std::shared_ptr<Integer> integer = std::get<std::shared_ptr<Integer>>(action);
             integer->_disp(converted);
+        } else if (std::holds_alternative<std::shared_ptr<Boolean>>(action)) {
+            std::shared_ptr<Boolean> boolean = std::get<std::shared_ptr<Boolean>>(action);
+            boolean->_disp(converted);
         } else {
             throw std::runtime_error("cannot convert data to string");
         }

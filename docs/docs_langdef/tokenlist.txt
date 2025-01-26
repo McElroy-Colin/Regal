@@ -18,7 +18,18 @@ Declarative tokens:
 
     'now': Denotes the reassigment/retyping of an existing variable or function. (e.g. 'now x = true')
 
+    'if': Keyword that precedes a boolean and executes a block of code based on that boolean. //////////////////////////
+
     '=': Assigns the given variable/function label to the given expression.
+
+
+Value tokens:
+
+    Integers: Whole numbers that represent their value. (e.g. 3)
+
+    'true': The boolean value True.
+
+    'false': The boolean value False.
 
 
 Mathematical tokens:
@@ -35,6 +46,12 @@ Mathematical tokens:
     '*': Multiplies two numbers.
 
     '/': Divides two numbers and truncates any decimal digits.
+
+    '>': Compares two values, returning true if the left value is "larger" than the right value.
+
+    '<': Compares two values, returning true if the left value is "smaller" than the right value.
+
+    '=': Compares two values for equality.
 
     '(': Denotes expression groupings to assign an order of operations to expressions.
 
