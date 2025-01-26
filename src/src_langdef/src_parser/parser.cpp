@@ -3,21 +3,30 @@
 #include "../../../include/inc_langdef/langdef.hpp"
 
 
-// Parsing function definitions.
+// parsing function definitions coded with the CFG.
 
 Action parse_line(std::list<Token>& token_list);
-Action parse_keyword_statement(std::list<Token>& token_list);
-Action parse_assignment_statement(std::list<Token>& token_list);
+
+// VARIABLE ASSIGNMENT:
+Action parse_explicit_assignment(std::list<Token>& token_list);
 Action parse_let_statement(std::list<Token>& token_list);
 Action parse_now_statement(std::list<Token>& token_list);
+Action parse_implicit_assignment(std::list<Token>& token_list);
+
 Action parse_expression(std::list<Token>& token_list);
+
+// BOOLEAN ARITHMETIC:
 Action parse_or_expression(std::list<Token>& token_list);
 Action parse_and_expression(std::list<Token>& token_list);
 Action parse_not_expression(std::list<Token>& token_list);
 Action parse_comparison_expression(std::list<Token>& token_list);
+
+// NUMERICAL ARITHMETIC:
 Action parse_additive_expression(std::list<Token>& token_list);
 Action parse_multiplicative_expression(std::list<Token>& token_list);
 Action parse_exponential_expression(std::list<Token>& token_list);
+
+// LOW-LEVEL VALUES:
 Action parse_minus_identifier_expression(std::list<Token>& token_list);
 Action parse_primitive_expression(std::list<Token>& token_list);
 Action parse_number_expression(std::list<Token>& token_list);
@@ -129,9 +138,10 @@ namespace {
 
 }
 
-// The AST generator consists of recursive functions that correspond to nonterminals in the Regal CFG.
+// The AST generator consists of recursive functions that correspond to nonterminals in the Regal CFG
+// The CFG can be found in ~docs/docs_langdef/CFG.txt.
 // All functions return Actions corresponding to nodes of the AST. 
-// The Action definition can be found in ~/include/inc_parser/parser.hpp
+// The Action definition can be found in ~/include/inc_langdef/langdef.hpp.
 
 // Generate and return an AST of Actions from a list of tokens.
 //      token_list: linked list of remaining tokens (input)
@@ -139,9 +149,9 @@ Action parse_line(std::list<Token>& token_list) {
     Action line;
 
     if (_lookahead_any(token_list, keyword_tokens)) {
-        line = parse_keyword_statement(token_list);   
+        line = parse_explicit_assignment(token_list);   
     } else {
-        line = parse_assignment_statement(token_list);
+        line = parse_implicit_assignment(token_list);
     }
 
     if (!token_list.empty()) {
@@ -154,9 +164,11 @@ Action parse_line(std::list<Token>& token_list) {
     return line;
 }
 
-// Parse a statement beginning with a keyword.
+// VARIABLE ASSIGNMENT:
+
+// Parse the assignment of a variable with an assignment keyword.
 //      token_list: linked list of remaining tokens (input)
-Action parse_keyword_statement(std::list<Token>& token_list) {
+Action parse_explicit_assignment(std::list<Token>& token_list) {
     if (_lookahead(token_list, Let)) {
         return parse_let_statement(token_list);
     } else if (_lookahead(token_list, Now)) {
@@ -166,7 +178,52 @@ Action parse_keyword_statement(std::list<Token>& token_list) {
     }
 }
 
-Action parse_assignment_statement(std::list<Token>& token_list) {
+// Parse a 'let' assignment statement.
+//      token_list: linked list of remaining tokens (input)
+Action parse_let_statement(std::list<Token>& token_list) {
+    Action expression;
+    Token variable_token;
+    String variable;
+
+    _match_bypass(token_list, Let);
+
+//  Bypass and store the variable name.
+    _query_bypass(token_list, Var, variable_token);
+    variable = std::get<String>(variable_token[1]);
+
+    _match_bypass(token_list, Equals);
+
+//  Parse the expression after '='.
+    expression = parse_expression(token_list);
+
+    return std::make_shared<Assign>(variable, expression);
+}
+
+// Parse a 'now' reassignment statement.
+//      token_list: linked list of remaining tokens (input)
+Action parse_now_statement(std::list<Token>& token_list) {
+    Action expression;
+    Token variable_token;
+    String variable;
+
+    _match_bypass(token_list, Now);
+
+//  Bypass and store the variable name.
+    _query_bypass(token_list, Var, variable_token);
+    variable = std::get<String>(variable_token[1]);
+
+    _match_bypass(token_list, Equals);
+
+//  Parse the expression following '='.
+    expression = parse_expression(token_list);
+
+//  Parameter boolean is false since this is an explicit ('now') reassignment.
+    return std::make_shared<Reassign>(variable, expression, false);
+}
+
+// Parse an implicit reassignment statement.
+//      token_list: linked list of remaining tokens (input)
+Action parse_implicit_assignment(std::list<Token>& token_list) {
     Action expression;
     Token variable_token;
     String variable;
@@ -175,65 +232,20 @@ Action parse_assignment_statement(std::list<Token>& token_list) {
     _query_bypass(token_list, Var, variable_token);
     variable = std::get<String>(variable_token[1]);
 
-    _match_bypass(token_list, Equals); // Bypass '='
+    _match_bypass(token_list, Equals);
 
 //  Parse the expression after '='.
     expression = parse_expression(token_list);
 
+//  Parameter boolean is true since this is an implicit reassignment.
     return std::make_shared<Reassign>(variable, expression, true);
-}
-
-
-// Parse a 'let' definition statement.
-//      token_list: linked list of remaining tokens (input)
-Action parse_let_statement(std::list<Token>& token_list) {
-    Action expression;
-    Token variable_token;
-    String variable;
-
-    _match_bypass(token_list, Let); // Bypass 'let'
-
-//  Bypass and store the variable name.
-    _query_bypass(token_list, Var, variable_token);
-    variable = std::get<String>(variable_token[1]);
-
-    _match_bypass(token_list, Equals); // Bypass '='
-
-//  Parse the expression after '='.
-    expression = parse_expression(token_list);
-
-    return std::make_shared<Assign>(variable, expression);
-}
-
-// Parse a 'now' redefinition statement.
-//      token_list: linked list of remaining tokens (input)
-Action parse_now_statement(std::list<Token>& token_list) {
-    Action expression;
-    Token variable_token;
-    String variable;
-
-    _match_bypass(token_list, Now); // Bypass 'now'
-
-//  Bypass and store the variable name.
-    _query_bypass(token_list, Var, variable_token);
-    variable = std::get<String>(variable_token[1]);
-
-    _match_bypass(token_list, Equals); // Bypass '='
-
-//  Parse the expression following '='.
-    expression = parse_expression(token_list);
-
-    return std::make_shared<Reassign>(variable, expression, false);
 }
 
 // Parse any expression as defined in the Regal CFG.
 //      token_list: linked list of remaining tokens (input)
 Action parse_expression(std::list<Token>& token_list) {
-    if (_lookahead_any(token_list, keyword_tokens)) {
-        return parse_keyword_statement(token_list);
-//  A Base Expression will link to many different types of expressions.
-    } else if (_lookahead(token_list, Nothing)) {
-        return ON_Nothing;
+    if (_lookahead(token_list, Nothing)) {
+        return OtherNodes::ON_Nothing;
     }
     
     return parse_or_expression(token_list);
@@ -242,9 +254,12 @@ Action parse_expression(std::list<Token>& token_list) {
 // The following three functions establish boolean order of operations in Regal. 
 // These functions are coded one-to-one with the Regal CFG.
 
+// Parse a boolean expression potentially containing '|' or 'or'.
+//      token_list: linked list of remaining tokens (input)
 Action parse_or_expression(std::list<Token>& token_list) {
     Action and_expression;
 
+//  Parse and store the expression before '|' or 'or'.
     and_expression = parse_and_expression(token_list);
 
     if (_lookahead(token_list, Or)) {
@@ -252,6 +267,7 @@ Action parse_or_expression(std::list<Token>& token_list) {
 
         _match_bypass(token_list, Or);
 
+//      Parse and store the expression after '|' or 'or'.
         or_expression = parse_or_expression(token_list);
 
         return std::make_shared<BinaryOperator>(Or, and_expression, or_expression);
@@ -260,9 +276,12 @@ Action parse_or_expression(std::list<Token>& token_list) {
     return and_expression;
 }
 
+// Parse a boolean expression potentially containing '&' or 'and'.
+//      token_list: linked list of remaining tokens (input)
 Action parse_and_expression(std::list<Token>& token_list) {
     Action not_expression;
 
+//  Parse and store the expression potentially containing '&' or 'and'.
     not_expression = parse_not_expression(token_list);
 
     if (_lookahead(token_list, And)) {
@@ -270,6 +289,7 @@ Action parse_and_expression(std::list<Token>& token_list) {
 
         _match_bypass(token_list, And);
 
+//      Parse and store the expression after '&' or 'and'.
         and_expression = parse_and_expression(token_list);
 
         return std::make_shared<BinaryOperator>(And, not_expression, and_expression);
@@ -278,12 +298,15 @@ Action parse_and_expression(std::list<Token>& token_list) {
     return not_expression;
 }
 
+// Parse a boolean expression potentially containing '!' or 'not'.
+//      token_list: linked list of remaining tokens (input)
 Action parse_not_expression(std::list<Token>& token_list) {
     if (_lookahead(token_list, Not)) {
         Action comparison_expression;
 
         _match_bypass(token_list, Not);
 
+//      Parse and store the expression after '!' or 'not'.
         comparison_expression = parse_comparison_expression(token_list);
 
         return std::make_shared<UnaryOperator>(Not, comparison_expression);
@@ -292,10 +315,13 @@ Action parse_not_expression(std::list<Token>& token_list) {
     return parse_comparison_expression(token_list);
 }
 
+// Parse an expression potentially comparing values with '>', '<', or '='.
+//      token_list: linked list of remaining tokens (input)
 Action parse_comparison_expression(std::list<Token>& token_list) {
     Action additive_expression;
     std::vector<TokenKey> comparison_operators;
 
+// Parse and store the expression before '>', '<', or '='.
     additive_expression = parse_additive_expression(token_list);
 
     comparison_operators = {Greater, Less, Equals};
@@ -304,9 +330,11 @@ Action parse_comparison_expression(std::list<Token>& token_list) {
         TokenKey operator_key;
         Action comparison_expression;
 
+//      Bypass and store the comparison operator.
         _query_bypass_any(token_list, comparison_operators, operator_token);
         operator_key = std::get<TokenKey>(operator_token[0]);
 
+//      Parse and store the expression after '>', '<', or '='.
         comparison_expression = parse_comparison_expression(token_list);
 
         return std::make_shared<BinaryOperator>(operator_key, additive_expression, comparison_expression);
