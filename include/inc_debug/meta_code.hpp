@@ -172,6 +172,7 @@ void display_token(const Token& token, const DisplayTokenOption disp_option, Str
             } else {
                 display = "<binary operator>";
             }
+            break;
 
         case TokenKey::LeftPar:
             display = "(";
