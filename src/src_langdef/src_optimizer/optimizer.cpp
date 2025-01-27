@@ -117,7 +117,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     return true;
                 case Div: 
                     if (int2->number == 0) {
-                        throw DivisionByZeroError("division by zero");
+                        throw DivisionByZeroError();
                     }
 
 //                  Return truncated division for integers.

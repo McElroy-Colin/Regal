@@ -131,7 +131,7 @@ class VariablePreInitializedError : public IncorrectInputError {
         VariablePreInitializedError(const String& variable, const bool error_msg = false) 
             : IncorrectInputError(error_msg 
                 ? variable 
-                : "Assignment: variable \'" + variable + "\' already initialized") {}
+                : "VariablePreInitializedError: variable \'" + variable + "\' already initialized") {}
 };
 
 // Error class representing invalid operator uses.
@@ -148,13 +148,14 @@ class InavlidOperatorError : public IncorrectInputError {
 //          data_type: name of the type of data using the operator (input)
 //          op: operator token key being used incorrectly (input)
         InavlidOperatorError(const String& data_type, const TokenKey op) 
-            : IncorrectInputError((data_type + " using \'" 
-                + display_token({op}, Literal, false) + "\' operator")) {}
+            : IncorrectInputError("InvalidOperatorError: " + data_type + " using \'" 
+                + display_token({op}, Literal, false) + "\' operator") {}
 
 //      Constructor to handle an operator taking invalid data. 
 //          op: operator token key being used incorrectly (input)
         InavlidOperatorError(const TokenKey op) 
-            : IncorrectInputError("\'" + display_token({op}, Literal, false) + "\' operator used with invalid type") {}
+            : IncorrectInputError("InvalidOperatorError: \'" 
+                + display_token({op}, Literal, false) + "\' operator used with invalid type") {}
 };
 
 // Error class representing division by 0.
