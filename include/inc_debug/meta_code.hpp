@@ -178,6 +178,16 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
             }
             break;
 
+        case TokenKey::Is: // TODO: allow for debugging dispaly of either = or is in optimizer
+            if (disp_option == Literal) {
+                display = "is";
+            } else if (disp_option == Key) {
+                display = "<comparison operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
         case TokenKey::LeftPar:
             display = "(";
             break;
