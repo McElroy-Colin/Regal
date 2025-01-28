@@ -53,7 +53,7 @@ Operator tokens:
 
     '<': Compares two values, returning true if the left value is "smaller" than the right value.
 
-    '=': Compares two values for equality.
+    '=' / 'is': Compares two values for equality.
 
 
 Special tokens:

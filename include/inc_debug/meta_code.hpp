@@ -11,10 +11,10 @@ enum ReturnValue {
 };
 
 // Display options for display_token function.
-enum DisplayTokenOption {
-    Literal,     // display the token as input by the user (e.g. 'let' is 'let', '4' is '4')
-    Key,         // display the token's key name (e.g. 'let' is 'let', '4' is '<integer>')
-    Subset       // display the set of tokens the token belongs to (e.g. 'let' is '<keyword>', '4' is '<number>')
+enum DisplayOption {
+    Literal,     // display as input by the user (e.g. 'let' is 'let', '4' is '4')
+    Key,         // display key name (e.g. 'let' is 'let', '4' is '<integer>')
+    Subset       // display the set of tokens the input belongs to (e.g. 'let' is '<keyword>', '4' is '<number>')
 };
 
 // Store the display string of the given token.
@@ -22,7 +22,7 @@ enum DisplayTokenOption {
 //      disp_option: controls the display string for the given token (input)
 //      display: display string of the token (output)
 //      assignment_operator: true if '=' is used to assign variables not compare values (input)
-void display_token(const Token& token, const DisplayTokenOption disp_option, String& display, const bool assignment_operator = true) {
+void display_token(const Token& token, const DisplayOption disp_option, String& display, const bool assignment_operator = true) {
     const TokenKey token_key = std::get<TokenKey>(token[0]);
 
     switch (token_key) {
@@ -161,7 +161,11 @@ void display_token(const Token& token, const DisplayTokenOption disp_option, Str
             break;
 
         case TokenKey::Var:
-            display = "<variable>";
+            if (disp_option == Literal) {
+                display = std::get<String>(token[1]);
+            } else {
+                display = "<variable>";
+            }
             break;
 
         case TokenKey::Equals:
@@ -194,10 +198,55 @@ void display_token(const Token& token, const DisplayTokenOption disp_option, Str
 }
 
 // Return value output overload of the above function.
-String display_token(const Token& token, const DisplayTokenOption disp_option, const bool assignment_operator = true) {
+String display_token(const Token& token, const DisplayOption disp_option, const bool assignment_operator = true) {
     String result;
 
     display_token(token, disp_option, result, assignment_operator);
+
+    return result;
+}
+
+// Store the display string of the given action.
+//      action: action to display (input)
+//      disp_option: controls the display string for the given action (input)
+//      display: display string of the action (output)
+//      assignment_operator: true if '=' is used to assign variables not compare values (input)
+void display_action(const Action& action, const DisplayOption disp_option, String& display) {
+    if (std::holds_alternative<std::shared_ptr<Integer>>(action)) {
+        if (disp_option == Literal) {
+            std::shared_ptr<Integer> integer = std::get<std::shared_ptr<Integer>>(action);
+            display = std::to_string(integer->number);
+        } else if (disp_option == Key) {
+            display = "<integer>";
+        } else {
+            display = "<number>";
+        }
+    } else if (std::holds_alternative<std::shared_ptr<Boolean>>(action)) {
+        if (disp_option == Literal) {
+            std::shared_ptr<Boolean> bool_action = std::get<std::shared_ptr<Boolean>>(action);
+            display = bool_action->boolean ? "true" : "false";
+        } else {
+            display = "<boolean>";
+        }
+    } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) {
+        if (disp_option == Literal) {
+            std::shared_ptr<Variable> variable = std::get<std::shared_ptr<Variable>>(action);
+            display = variable->variable;
+        } else {
+            display = "<variable>";
+        }
+    } else {
+        display = "<NON PRIMITIVE>";
+    }
+
+    return;
+}
+
+// Return value output overload of the above function.
+String display_action(const Action& action, const DisplayOption disp_option) {
+    String result;
+
+    display_action(action, disp_option, result);
 
     return result;
 }

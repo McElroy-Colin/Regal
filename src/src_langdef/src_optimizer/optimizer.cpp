@@ -10,7 +10,7 @@ namespace {
 //  Calculate the exponent with integer base and exponent.
 //      base: integer base (input)
 //      exp: integer exponent to apply to base (input)
-    int int_exp(int base, int exp) {
+    int int_exp(const int base, const int exp) {
         if (exp == 0) {
             return 1;
         } else if (exp < 0) {
@@ -29,6 +29,7 @@ namespace {
     }
 
 }
+
 
 // TODO: convert it to a switch statement for optimization
 
@@ -62,98 +63,208 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
     } else if (std::holds_alternative<std::shared_ptr<UnaryOperator>>(action)) { // UnaryOperator
         std::shared_ptr<UnaryOperator> unary_op = std::move(std::get<std::shared_ptr<UnaryOperator>>(action));
 
-        TokenKey current_op = unary_op->op;
-
 //      Optimize the operator's expression.
-        Action current_expr = std::move(unary_op->expression);
-        optimize_action(current_expr, var_stack);
+        optimize_action(unary_op->expression, var_stack);
 
-        if (std::holds_alternative<std::shared_ptr<Boolean>>(current_expr)) { // Boolean
-            std::shared_ptr<Boolean> bool_expr = std::move(std::get<std::shared_ptr<Boolean>>(current_expr));
+        switch (unary_op->op) {
+            case Not: {
+                if (!std::holds_alternative<std::shared_ptr<Boolean>>(unary_op->expression)) { // Boolean
+                    throw InavlidOperatorError(unary_op->expression, Not);
+                }
 
-//          Update action with evaluated operaton.
-            switch (current_op) {
-                case Not:
-                    action = std::make_shared<Boolean>(!bool_expr->boolean);
-                    return true;
-                default:
-                    throw InavlidOperatorError("boolean", current_op);
+                std::shared_ptr<Boolean> bool_expr = std::move(std::get<std::shared_ptr<Boolean>>(unary_op->expression));
+                action = std::make_shared<Boolean>(!bool_expr->boolean);
+                return true;
             }
-        } else {
-            throw InavlidOperatorError(current_op);
+            default:
+                throw InavlidOperatorError(unary_op->expression, unary_op->op);
         }
 
     } else if (std::holds_alternative<std::shared_ptr<BinaryOperator>>(action)) { // BinaryOperator
         std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
 
-        TokenKey current_op = binary_op->op;
-
 //      Optimize each side of the operator.
-        Action current_expr1 = std::move(binary_op->expression1);
-        Action current_expr2 = std::move(binary_op->expression2);
-        optimize_action(current_expr1, var_stack);
-        optimize_action(current_expr2, var_stack);
+        optimize_action(binary_op->expression1, var_stack);
+        optimize_action(binary_op->expression2, var_stack);
 
-//      Ensure that the expressions match in type.
-        if (type_mismatch(current_expr1, current_expr2)) {
-            throw TypeMismatchError(current_op);
-        }
-        
-//      Evaluate based on what type the expressions are.
-        if (std::holds_alternative<std::shared_ptr<Integer>>(current_expr1)) { // Integer
-            std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(current_expr1));
-            std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(current_expr2));
-            
-//          Update action with the evaluated operation.
-            switch (current_op) {
-                case Plus:
+//      For each operator, check for a type mismatch then perform the operation and assign it to the output action variable.
+        switch (binary_op->op) {
+            case Plus:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
                     action = std::make_shared<Integer>(int1->number + int2->number);
-                    return true;
-                case Minus:
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case Minus:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
                     action = std::make_shared<Integer>(int1->number - int2->number);
-                    return true;
-                case Mult:
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case Mult:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
                     action = std::make_shared<Integer>(int1->number * int2->number);
-                    return true;
-                case Div: 
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case Div:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
+
                     if (int2->number == 0) {
                         throw DivisionByZeroError();
                     }
+                    action = std::make_shared<Integer>(int1->number * int2->number);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
 
-//                  Return truncated division for integers.
-                    action = std::make_shared<Integer>(int1->number / int2->number);
-                    return true;
-                case Exp:
+            case Exp:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
                     action = std::make_shared<Integer>(int_exp(int1->number, int2->number));
-                    return true;
-                case Greater:
-                    action = std::make_shared<Boolean>(int1->number > int2->number);
-                    return true;
-                case Less:
-                    action = std::make_shared<Boolean>(int1->number < int2->number);
-                    return true;
-                case Equals:
-                    action = std::make_shared<Boolean>(int1->number == int2->number);
-                    return true;
-                default:
-                    throw InavlidOperatorError("integer", current_op);
-            }
-        } else if (std::holds_alternative<std::shared_ptr<Boolean>>(current_expr1)) { // Boolean
-            std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(current_expr1));
-            std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(current_expr2));
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+            
+            case Greater:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
 
-            switch(current_op){
-                case Or:
-                    action = std::make_shared<Boolean>(bool1 ->boolean || bool2->boolean);
-                    return true;
-                case And:
-                    action = std::make_shared<Boolean>(bool1 ->boolean && bool2->boolean);
-                    return true;
-                default:
-                    throw InavlidOperatorError("boolean", current_op);
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(int1->number > int2->number);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+            
+            case Less:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(int1->number < int2->number);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case And:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->expression1)) {
+                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression1));
+                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(bool1->boolean && bool2->boolean);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case Or:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->expression1)) {
+                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression1));
+                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(bool1->boolean || bool2->boolean);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+
+            case Is:
+                if (type_mismatch(binary_op->expression1, binary_op->expression2)) {
+                    throw TypeMismatchError(binary_op->op);
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->expression1)) {
+                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression1));
+                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(int1->number == int2->number);
+
+                } else if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->expression1)) {
+                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression1));
+                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->expression2));
+                    action = std::make_shared<Boolean>(bool1->boolean == bool2->boolean);
+                } else {
+                    throw InavlidOperatorError(binary_op->expression1, binary_op->op);
+                }
+                return true;
+            default:
+                throw FatalError("binary operator \'" + display_token({binary_op->op}, Literal, false) + "\' not recognized");
+        }
+    } else if (std::holds_alternative<std::shared_ptr<TernaryOperator>>(action)) { // TernaryOperator
+        std::shared_ptr<TernaryOperator> ternary_op = std::move(std::get<std::shared_ptr<TernaryOperator>>(action));
+
+        optimize_action(ternary_op->expression1, var_stack);
+        optimize_action(ternary_op->expression2, var_stack);
+        optimize_action(ternary_op->expression3, var_stack);
+
+        switch (ternary_op->op) {
+            case If: {
+                if (!std::holds_alternative<std::shared_ptr<Boolean>>(ternary_op->expression2)) {
+                    throw TypeMismatchError(ternary_op->expression2);
+                }
+
+                std::shared_ptr<Boolean> bool_condition = std::move(std::get<std::shared_ptr<Boolean>>(ternary_op->expression2));
+
+                if (bool_condition->boolean) {
+                    action = std::move(ternary_op->expression1);
+                } else {
+                    action = std::move(ternary_op->expression3);
+                }
+
+                return true;
             }
-        } else {
-            throw InavlidOperatorError(current_op);
+            default:
+                throw FatalError("ternary operator \'" + display_token({ternary_op->op}, Literal, false) + "\' not recognized");
         }
 
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.

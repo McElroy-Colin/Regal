@@ -33,7 +33,7 @@ void execute_action(Action& action, std::map<String, Action>& var_stack) {
 
         execute_action(var_action->expression, var_stack);
 
-//      Check if the reassignment is implicit and verify that it is the same as the variable previously was if so.
+//      Type check reassignment whether it is implicit or not.
         if ((var_action->implicit) && (type_mismatch(var_stack[var_action->variable], var_action->expression))) {
             throw ImplicitMismatchError(var_action->variable);
         } else if ((!var_action->implicit) && (!type_mismatch(var_stack[var_action->variable], var_action->expression))) {

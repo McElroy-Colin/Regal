@@ -18,13 +18,13 @@ using String = std::string;
 // Enum for all tokens in Regal.
 enum TokenKey {
 //  Keywords
-    Let, Now,
+    Let, Now, If, Else,
 
 //  Primitive data types
     Int, Bool,
 
 //  Primitive Operators
-    Plus, Minus, Mult, Div, Exp, And, Or, Not, Greater, Less, /*Equals,*/ 
+    Plus, Minus, Mult, Div, Exp, And, Or, Not, Greater, Less, Is, /*Equals,*/ 
 
 //  Variables
     Var,
@@ -41,6 +41,7 @@ enum TokenKey {
 std::vector<TokenKey> keyword_tokens = {Let, Now};
 std::vector<TokenKey> number_tokens = {Int};
 
+
 // Token aliases.
 using Token = std::vector<std::variant<TokenKey, int, String>>;
 
@@ -50,6 +51,7 @@ struct Boolean;
 struct Variable;
 struct UnaryOperator;
 struct BinaryOperator;
+struct TernaryOperator;
 struct Assign;
 struct Reassign;
 
@@ -65,6 +67,7 @@ using Action = std::variant<
     std::shared_ptr<Variable>, 
     std::shared_ptr<UnaryOperator>, 
     std::shared_ptr<BinaryOperator>, 
+    std::shared_ptr<TernaryOperator>, 
     std::shared_ptr<Assign>, 
     std::shared_ptr<Reassign>,
     OtherNodes
@@ -152,6 +155,26 @@ struct BinaryOperator {
     BinaryOperator(const BinaryOperator& other) : 
         op(other.op), expression1(other.expression1), 
         expression2(other.expression2) {}
+};
+
+// Struct for a ternary operator node.
+struct TernaryOperator {
+    TokenKey op;
+    Action expression1, expression2, expression3;
+
+    TernaryOperator() : op(Nothing), expression1(), expression2(), expression3() {}
+
+    TernaryOperator(TokenKey op, Action e1, Action e2, Action e3) 
+        : op(op), expression1(e1), expression2(e2), expression3(e3) {}
+
+    TernaryOperator(TernaryOperator&& other) noexcept : op(other.op),
+        expression1(std::move(other.expression1)),
+        expression2(std::move(other.expression2)),
+        expression3(std::move(other.expression3)) {}
+
+    TernaryOperator(const TernaryOperator& other) 
+        : op(other.op), expression1(other.expression1), 
+        expression2(other.expression2), expression3(other.expression3) {}
 };
 
 // Struct for an assignment node.

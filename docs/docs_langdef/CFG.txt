@@ -11,24 +11,24 @@ Context-Free Grammar that dictates order of syntax in Regal
 
 
 
-Line -> ExplicitAssignment | ImplicitAssignment
+Line -> Assignment
 
+Assignment -> ExplicitAssignment | ImplicitAssignment
 
-VARIABLE ASSIGNMENT:
+ExplicitAssignment -> LetStatement | NowStatement
 
-    ExplicitAssignment -> LetStatement | NowStatement
-
-        LetStatement -> 'let' '<var>' '=' Expression
+        LetStatement -> 'let' '<var>' '=' InlineIfStatement
             <var> is a custom variable name
 
-        NowStatement -> 'now' '<var>' '=' Expression
+        NowStatement -> 'now' '<var>' '=' InlineIfStatement
             <var> is a custom variable name
 
-    ImplicitAssignment -> '<var>' '=' Expression
+ImplicitAssignment -> '<var>' '=' InlineIfStatement
         <var> is an already defined variable name
 
-Expression -> 'nothing' | OrExpr 
+InlineIfStatement -> Expression 'if' OrExpr 'else' InlineIfStatement | Expression
 
+Expression -> 'nothing' | OrExpr 
 
 BOOLEAN ARITHMETIC:
 
@@ -42,7 +42,7 @@ BOOLEAN ARITHMETIC:
         <not_op> is '!' or 'not'
     
     ComparisonExpr -> AdditiveExpr '<comp_op>' ComparisonExpr | AdditiveExpr
-        <comp_op> is '>', '<', or '='
+        <comp_op> is '>', '<', '=', or 'is'
 
 
 NUMERICAL ARITHMETIC:
@@ -60,7 +60,7 @@ LOW-LEVEL VALUES:
 
     MinusIdentifierExpr -> PrimitiveExpr | '-'PrimitiveExpr
 
-        PrimitiveExpr -> '<var>' | NumberExpr | BooleanExpr | '('OrExpr')'
+        PrimitiveExpr -> '<var>' | NumberExpr | BooleanExpr | '('InlineIfStatement')'
             <var> is a custom variable name
 
             NumberExpr -> '<integer>'

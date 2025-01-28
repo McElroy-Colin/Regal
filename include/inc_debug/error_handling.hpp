@@ -6,6 +6,7 @@
 #ifndef ERROR_HANDLING_HPP
 #define ERROR_HANDLING_HPP
 
+
 // Error class representing severe logic mistakes in compiler code. These should never throw.
 class FatalError : public std::runtime_error {
     public: 
@@ -14,7 +15,7 @@ class FatalError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        FatalError(const String& error_msg) : std::runtime_error(error_msg) {}
+        FatalError(const String& error_msg) : std::runtime_error("FatalError: " + error_msg) {}
 };
 
 // Error class representing the use of an undefined token.
@@ -44,7 +45,7 @@ class UnrecognizedInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        UnrecognizedInputError(const String& error_msg) : std::runtime_error(error_msg) {}
+        UnrecognizedInputError(const String& error_msg) : std::runtime_error("UnrecognizedInputError: " + error_msg) {}
 
 //      Constructor taking a line and position to extract a problematic token.
 //          line: text to extract token from (input)
@@ -65,12 +66,12 @@ class UnexpectedInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        UnexpectedInputError(const String& error_msg) : std::runtime_error(error_msg) {}
+        UnexpectedInputError(const String& error_msg) : std::runtime_error("UnexpectedInputError: " + error_msg) {}
 
 //      Constructor to handle when user input ends before parsing recognizes a line.
 //          expected_token: token key that was expected by the parser (input)
 //          display_option: controls how to display the given token as in display_token (input)
-        UnexpectedInputError(const TokenKey expected_token, const DisplayTokenOption display_option)
+        UnexpectedInputError(const TokenKey expected_token, const DisplayOption display_option)
             : std::runtime_error("UnexpectedInputError: expected \'" 
                 + display_token({expected_token}, display_option) + "\' but input ended") {}
 
@@ -78,7 +79,7 @@ class UnexpectedInputError : public std::runtime_error {
 //          given_token: token that was input and is incorrect in parsing (input) 
 //          expected_token: token key that was expected by the parser (input)
 //          display_option: controls how to display the given tokens as in display_token (input)
-        UnexpectedInputError(const Token& given_token, const TokenKey expected_token, const DisplayTokenOption display_option)
+        UnexpectedInputError(const Token& given_token, const TokenKey expected_token, const DisplayOption display_option)
             : std::runtime_error("UnexpectedInputError: expected \'" 
                 + display_token({expected_token}, display_option) + "\' but received \'" 
                 + display_token(given_token, display_option) + "\'") {}
@@ -86,7 +87,7 @@ class UnexpectedInputError : public std::runtime_error {
 //      Constructor to handle extra tokens after a parser has completed a line.
 //          extra_token: first token after parsing completed (input)
 //          display_option: controls how to display the given token as in display_token (input)
-        UnexpectedInputError(const Token& extra_token, const DisplayTokenOption display_option) 
+        UnexpectedInputError(const Token& extra_token, const DisplayOption display_option) 
             : std::runtime_error("UnexpectedInputError: excess tokens starting at \'" 
                 + display_token(extra_token, display_option) + "\'") {}
 };
@@ -99,7 +100,7 @@ class IncorrectInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        IncorrectInputError(const String& error_msg) : std::runtime_error(error_msg) {}
+        IncorrectInputError(const String& error_msg) : std::runtime_error("IncorrectInputError: " + error_msg) {}
 };
 
 // Error class representing uninitialized variable errors.
@@ -113,9 +114,9 @@ class VariableNotInitializedError : public IncorrectInputError {
 //          error_msg: true if variable argument is an error message, 
 //                     false if variable argument is a variable name (input)
         VariableNotInitializedError(const String& variable, const bool error_msg = false) 
-            : IncorrectInputError(error_msg 
+            : IncorrectInputError("VariableNotInitializedError: " + error_msg 
                 ? variable 
-                : "VariableNotInitializedError: variable \'" + variable + "\' not initialized") {}
+                : "variable \'" + variable + "\' not initialized") {}
 };
 
 // Error class representing duplicate initialized variables.
@@ -129,9 +130,9 @@ class VariablePreInitializedError : public IncorrectInputError {
 //          error_msg: true if variable argument is an error message, 
 //                     false if variable argument is a variable name (input)
         VariablePreInitializedError(const String& variable, const bool error_msg = false) 
-            : IncorrectInputError(error_msg 
+            : IncorrectInputError("VariablePreInitializedError: " + error_msg 
                 ? variable 
-                : "VariablePreInitializedError: variable \'" + variable + "\' already initialized") {}
+                : "variable \'" + variable + "\' already initialized") {}
 };
 
 // Error class representing invalid operator uses.
@@ -142,13 +143,13 @@ class InavlidOperatorError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        InavlidOperatorError(const String& error_msg) : IncorrectInputError(error_msg) {}
+        InavlidOperatorError(const String& error_msg) : IncorrectInputError("InvalidOperatorError: " + error_msg) {}
 
 //      Constructor to handle invalid applications of an operator to data.
-//          data_type: name of the type of data using the operator (input)
+//          data_type: data using the operator (input)
 //          op: operator token key being used incorrectly (input)
-        InavlidOperatorError(const String& data_type, const TokenKey op) 
-            : IncorrectInputError("InvalidOperatorError: " + data_type + " using \'" 
+        InavlidOperatorError(const Action& data_type, const TokenKey op)
+            : IncorrectInputError("InvalidOperatorError: " + display_action(data_type, Literal) + " using \'" 
                 + display_token({op}, Literal, false) + "\' operator") {}
 
 //      Constructor to handle an operator taking invalid data. 
@@ -166,7 +167,7 @@ class DivisionByZeroError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        DivisionByZeroError(const String& error_msg) : IncorrectInputError(error_msg) {}
+        DivisionByZeroError(const String& error_msg) : IncorrectInputError("DivisionByZeroError: " + error_msg) {}
 };
 
 // Error class representing mismatching type errors.
@@ -179,12 +180,15 @@ class TypeMismatchError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        TypeMismatchError(const String& error_msg) : IncorrectInputError(error_msg) {}
+        TypeMismatchError(const String& error_msg) : IncorrectInputError("TypeMismatchError: " + error_msg) {}
 
 //      Constructor handling mismatched types on a given operator.
 //          op: operator token key wwith mismatched types (input)
         TypeMismatchError(const TokenKey op) 
             : IncorrectInputError("TypeMismatchError: \'" + display_token({op}, Literal, false) + "\' operator mismatched types") {}
+
+        TypeMismatchError(Action& data_type) 
+            : IncorrectInputError("TypeMismatchError: if statement expected a boolean condition but received " + display_action(data_type, Literal)) {}
 };
 
 // Error class representing an implicit reassignment type mismatch error.

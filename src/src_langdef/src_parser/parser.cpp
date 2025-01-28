@@ -7,6 +7,10 @@
 // parsing function definitions coded with the CFG.
 
 Action parse_line(std::list<Token>& token_list);
+Action parse_assignment(std::list<Token>& token_list);
+Action parse_inline_if_statement(std::list<Token>& token_list);
+Action parse_single_operation(std::list<Token>& token_list);
+
 
 // VARIABLE ASSIGNMENT:
 Action parse_explicit_assignment(std::list<Token>& token_list);
@@ -123,21 +127,28 @@ namespace {
 // All functions return Actions corresponding to nodes of the AST. 
 // The Action definition can be found in ~/include/inc_langdef/langdef.hpp.
 
+
 // Generate and return an AST of Actions from a list of tokens.
 //      token_list: linked list of remaining tokens (input)
 Action parse_line(std::list<Token>& token_list) {
     Action line;
 
-    if (_lookahead_any(token_list, keyword_tokens)) {
-        line = parse_explicit_assignment(token_list);   
-    } else {
-        line = parse_implicit_assignment(token_list);
-    }
+    line = parse_assignment(token_list);
 
 //  Handle if there are more tokens after parsing.
     token_list.empty() ?: throw UnexpectedInputError(token_list.front(), Literal);
 
     return line;
+}
+
+// Parse the assignment of a variable.
+//      token_list: linked list of remaining tokens (input)
+Action parse_assignment(std::list<Token>& token_list) {
+    if (_lookahead_any(token_list, {Let, Now})) {
+        return parse_explicit_assignment(token_list);
+    }
+
+    return parse_implicit_assignment(token_list);
 }
 
 // Parse the assignment of a variable with an assignment keyword.
@@ -158,7 +169,7 @@ Action parse_explicit_assignment(std::list<Token>& token_list) {
 // Parse a 'let' assignment statement.
 //      token_list: linked list of remaining tokens (input)
 Action parse_let_statement(std::list<Token>& token_list) {
-    Action expression;
+    Action inline_if_statement;
     Token variable_token;
     String variable;
 
@@ -171,15 +182,15 @@ Action parse_let_statement(std::list<Token>& token_list) {
     _match_bypass(token_list, Equals);
 
 //  Parse the expression after '='.
-    expression = parse_expression(token_list);
+    inline_if_statement = parse_inline_if_statement(token_list);
 
-    return std::make_shared<Assign>(variable, expression);
+    return std::make_shared<Assign>(variable, inline_if_statement);
 }
 
 // Parse a 'now' reassignment statement.
 //      token_list: linked list of remaining tokens (input)
 Action parse_now_statement(std::list<Token>& token_list) {
-    Action expression;
+    Action inline_if_statement;
     Token variable_token;
     String variable;
 
@@ -192,16 +203,16 @@ Action parse_now_statement(std::list<Token>& token_list) {
     _match_bypass(token_list, Equals);
 
 //  Parse the expression following '='.
-    expression = parse_expression(token_list);
+    inline_if_statement = parse_inline_if_statement(token_list);
 
 //  Parameter boolean is false since this is an explicit ('now') reassignment.
-    return std::make_shared<Reassign>(variable, expression, false);
+    return std::make_shared<Reassign>(variable, inline_if_statement, false);
 }
 
 // Parse an implicit reassignment statement.
 //      token_list: linked list of remaining tokens (input)
 Action parse_implicit_assignment(std::list<Token>& token_list) {
-    Action expression;
+    Action inline_if_statement;
     Token variable_token;
     String variable;
 
@@ -212,10 +223,35 @@ Action parse_implicit_assignment(std::list<Token>& token_list) {
     _match_bypass(token_list, Equals);
 
 //  Parse the expression after '='.
-    expression = parse_expression(token_list);
+    inline_if_statement = parse_inline_if_statement(token_list);
 
 //  Parameter boolean is true since this is an implicit reassignment.
-    return std::make_shared<Reassign>(variable, expression, true);
+    return std::make_shared<Reassign>(variable, inline_if_statement, true);
+}
+
+// Parse a potentially inline ternary if statement.
+//      token_list: linked list of remaining tokens (input)
+Action parse_inline_if_statement(std::list<Token>& token_list) {
+    Action expression;
+
+    expression = parse_expression(token_list);
+
+//  Check for a ternary if statement.
+    if (_lookahead(token_list, If)) {
+        Action or_expression, inline_if_statement;
+
+        _match_bypass(token_list, If);
+
+        or_expression = parse_or_expression(token_list);
+
+        _match_bypass(token_list, Else);
+
+        inline_if_statement = parse_inline_if_statement(token_list);
+
+        return std::make_shared<TernaryOperator>(If, expression, or_expression, inline_if_statement);
+    }
+
+    return expression;
 }
 
 // Parse any expression as defined in the Regal CFG.
@@ -292,16 +328,16 @@ Action parse_not_expression(std::list<Token>& token_list) {
     return parse_comparison_expression(token_list);
 }
 
-// Parse an expression potentially comparing values with '>', '<', or '='.
+// Parse an expression potentially comparing values with '>', '<', '=', or 'is'.
 //      token_list: linked list of remaining tokens (input)
 Action parse_comparison_expression(std::list<Token>& token_list) {
     Action additive_expression;
     std::vector<TokenKey> comparison_operators;
 
-// Parse and store the expression before '>', '<', or '='.
+// Parse and store the expression before '>', '<', '=', or 'is'.
     additive_expression = parse_additive_expression(token_list);
 
-    comparison_operators = {Greater, Less, Equals};
+    comparison_operators = {Greater, Less, Equals, Is};
     if (_lookahead_any(token_list, comparison_operators)) {
         Token operator_token;
         TokenKey operator_key;
@@ -311,7 +347,12 @@ Action parse_comparison_expression(std::list<Token>& token_list) {
         _query_bypass_any(token_list, comparison_operators, operator_token);
         operator_key = std::get<TokenKey>(operator_token[0]);
 
-//      Parse and store the expression after '>', '<', or '='.
+//      Compare for equality only with the Is operator for clarity.
+        if (operator_key == Equals) {
+            operator_key = Is;
+        }
+
+//      Parse and store the expression after '>', '<', '=', or 'is'.
         comparison_expression = parse_comparison_expression(token_list);
 
         return std::make_shared<BinaryOperator>(operator_key, additive_expression, comparison_expression);
@@ -440,16 +481,16 @@ Action parse_primitive_expression(std::list<Token>& token_list) {
     } else if (_lookahead(token_list, Bool)) {
         return parse_boolean_expression(token_list);
     }
-    Action or_expression;
+    Action inline_if_statement;
 
     _match_bypass(token_list, LeftPar);
 
-//  Parse and store the encased expression.
-    or_expression = parse_or_expression(token_list);
+//  Parse and store the encased statement.
+    inline_if_statement = parse_inline_if_statement(token_list);
 
     _match_bypass(token_list, RightPar);
 
-    return or_expression;
+    return inline_if_statement;
 }
 
 // Parse an expression containing just a number token.
