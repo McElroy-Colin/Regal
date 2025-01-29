@@ -123,10 +123,6 @@ void lex_string(String& line, std::list<Token>& token_list) {
             token_list.push_back({ Else });
             string_index = matched_index;
 
-        } else if ((matched_index = _match_token(line, "nothing", string_index, true)) > string_index) {
-            token_list.push_back({ Nothing });
-            string_index = matched_index;
-
         } else if ((matched_index = _match_token(line, "and", string_index, true)) > string_index) {
             token_list.push_back({ And });
             string_index = matched_index;
