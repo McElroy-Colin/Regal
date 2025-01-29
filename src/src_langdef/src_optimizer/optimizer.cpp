@@ -228,6 +228,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case Equals:
             case Is:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());

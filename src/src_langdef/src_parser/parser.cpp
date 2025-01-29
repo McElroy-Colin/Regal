@@ -383,11 +383,6 @@ Action parse_comparison_expression(std::list<Token>& token_list) {
         _query_bypass_any(token_list, comparison_operators, operator_token);
         operator_key = std::get<TokenKey>(operator_token[0]);
 
-//      Compare for equality only with the Is operator for clarity.
-        if (operator_key == Equals) {
-            operator_key = Is;
-        }
-
 //      Parse and store the expression after '>', '<', '=', or 'is'.
         comparison_expression = parse_comparison_expression(token_list);
 
