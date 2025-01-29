@@ -5,8 +5,10 @@
 
 
 // parsing function definitions coded with the CFG.
+Action parse_file(std::list<Token>& token_list);
+Action parse_code_block(std::list<Token>& token_list);
 
-Action parse_line(std::list<Token>& token_list);
+Action parse_single_operation(std::list<Token>& token_list);
 Action parse_assignment(std::list<Token>& token_list);
 Action parse_inline_if_statement(std::list<Token>& token_list);
 Action parse_single_operation(std::list<Token>& token_list);
@@ -130,15 +132,53 @@ namespace {
 
 // Generate and return an AST of Actions from a list of tokens.
 //      token_list: linked list of remaining tokens (input)
-Action parse_line(std::list<Token>& token_list) {
-    Action line;
+Action parse_file(std::list<Token>& token_list) {
+    Action code_block;
 
-    line = parse_assignment(token_list);
+    if (_lookahead(token_list, Newline)) {
+        _match_bypass(token_list, Newline);
+    }
+    // Excess whitespace is handled during lexing.
 
-//  Handle if there are more tokens after parsing.
+    code_block =  parse_code_block(token_list);
+
+    if (!token_list.empty()) {
+        _match_bypass(token_list, Newline);
+    }
+
+    //  Handle if there are more tokens after parsing.
     token_list.empty() ?: throw UnexpectedInputError(token_list.front(), Literal);
 
-    return line;
+    return code_block;
+}
+
+Action parse_code_block(std::list<Token>& token_list) {
+    Action single_operation;
+
+    single_operation = parse_single_operation(token_list);
+
+    if (_lookahead(token_list, Newline)) {
+        Action code_block;
+
+        _match_bypass(token_list, Newline);
+    // Excess whitespace is handled during lexing.
+
+        if (token_list.empty()) {
+            return single_operation;
+        }
+
+        code_block = parse_code_block(token_list);
+
+        return std::make_shared<CodeBlock>(single_operation, code_block);
+    }
+    
+    return single_operation;
+}
+
+// Generate and return an AST of Actions from a list of tokens.
+//      token_list: linked list of remaining tokens (input)
+Action parse_single_operation(std::list<Token>& token_list) {
+    return parse_assignment(token_list);
 }
 
 // Parse the assignment of a variable.

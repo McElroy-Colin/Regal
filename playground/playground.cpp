@@ -145,7 +145,7 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
         } else {
             try {
                 lex_string(curr_line, tokens);
-                code = parse_line(tokens);
+                code = parse_single_operation(tokens);
                 optimize_action(code, stack);
                 execute_action(code, stack);
 

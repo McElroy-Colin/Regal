@@ -15,7 +15,9 @@ class FatalError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        FatalError(const String& error_msg) : std::runtime_error("FatalError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        FatalError(const String& error_msg, const bool derived = true) 
+            : std::runtime_error(derived ? error_msg : "FatalError: " + error_msg) {}
 };
 
 // Error class representing the use of an undefined token.
@@ -45,7 +47,9 @@ class UnrecognizedInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        UnrecognizedInputError(const String& error_msg) : std::runtime_error("UnrecognizedInputError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        UnrecognizedInputError(const String& error_msg, const bool derived = true) 
+            : std::runtime_error(derived ? error_msg : "UnrecognizedInputError: " + error_msg) {}
 
 //      Constructor taking a line and position to extract a problematic token.
 //          line: text to extract token from (input)
@@ -66,7 +70,9 @@ class UnexpectedInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        UnexpectedInputError(const String& error_msg) : std::runtime_error("UnexpectedInputError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        UnexpectedInputError(const String& error_msg, const bool derived = true) 
+            : std::runtime_error(derived ? error_msg : "UnexpectedInputError: " + error_msg) {}
 
 //      Constructor to handle when user input ends before parsing recognizes a line.
 //          expected_token: token key that was expected by the parser (input)
@@ -100,7 +106,9 @@ class IncorrectInputError : public std::runtime_error {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        IncorrectInputError(const String& error_msg) : std::runtime_error("IncorrectInputError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        IncorrectInputError(const String& error_msg, const bool derived = true) 
+            : std::runtime_error(derived ? error_msg : "IncorrectInputError: " + error_msg) {}
 };
 
 // Error class representing uninitialized variable errors.
@@ -143,7 +151,9 @@ class InavlidOperatorError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        InavlidOperatorError(const String& error_msg) : IncorrectInputError("InvalidOperatorError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        InavlidOperatorError(const String& error_msg, const bool derived = true) 
+            : IncorrectInputError(derived ? error_msg : "InvalidOperatorError: " + error_msg) {}
 
 //      Constructor to handle invalid applications of an operator to data.
 //          data_type: data using the operator (input)
@@ -167,7 +177,9 @@ class DivisionByZeroError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        DivisionByZeroError(const String& error_msg) : IncorrectInputError("DivisionByZeroError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        DivisionByZeroError(const String& error_msg, const bool derived) 
+            : IncorrectInputError(derived ? error_msg : "DivisionByZeroError: " + error_msg) {}
 };
 
 // Error class representing mismatching type errors.
@@ -180,7 +192,9 @@ class TypeMismatchError : public IncorrectInputError {
 
 //      Constructor taking a message.
 //          error_msg: error message to display (input)
-        TypeMismatchError(const String& error_msg) : IncorrectInputError("TypeMismatchError: " + error_msg) {}
+//          derived: true if the error is called from a derived error (input)
+        TypeMismatchError(const String& error_msg, const bool derived = true) 
+            : IncorrectInputError(derived ? error_msg : "TypeMismatchError: " + error_msg) {}
 
 //      Constructor handling mismatched types on a given operator.
 //          op: operator token key wwith mismatched types (input)
