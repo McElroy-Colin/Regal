@@ -257,10 +257,6 @@ Action parse_inline_if_statement(std::list<Token>& token_list) {
 // Parse any expression as defined in the Regal CFG.
 //      token_list: linked list of remaining tokens (input)
 Action parse_expression(std::list<Token>& token_list) {
-    if (_lookahead(token_list, Nothing)) {
-        return OtherNodes::ON_Nothing;
-    }
-    
     return parse_or_expression(token_list);
 }
 

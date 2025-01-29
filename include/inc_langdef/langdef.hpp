@@ -33,7 +33,7 @@ enum TokenKey {
 //  Groupers
     LeftPar, RightPar,
 
-//  Nothing token
+//  Nothing token for debug purposes.
     Nothing
 };
 
@@ -55,157 +55,454 @@ struct TernaryOperator;
 struct Assign;
 struct Reassign;
 
-// Nodes that do not require a class/struct.
-enum OtherNodes {
-    ON_Nothing
-};
-
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
 using Action = std::variant<
     std::shared_ptr<Integer>, 
-    std::shared_ptr<Boolean>,
+    std::shared_ptr<Boolean>, 
     std::shared_ptr<Variable>, 
     std::shared_ptr<UnaryOperator>, 
     std::shared_ptr<BinaryOperator>, 
     std::shared_ptr<TernaryOperator>, 
     std::shared_ptr<Assign>, 
-    std::shared_ptr<Reassign>,
-    OtherNodes
+    std::shared_ptr<Reassign>
 >;
 
-// Struct for an Integer node.
-struct Integer {
-    int number;
+// Display options for pieces of data.
+enum DisplayOption {
+    Literal,     // display as input by the user (e.g. 'let' is 'let', '4' is '4')
+    Key,         // display key name (e.g. 'let' is 'let', '4' is '<integer>')
+    Subset       // display the set of tokens the data belongs to (e.g. 'let' is '<keyword>', '4' is '<number>')
+};
 
-    Integer() : number(0) {}
+// Store the display string of the given token.
+//      token: token to display (input)
+//      disp_option: controls the display string for the given token (input)
+//      display: display string of the token (output)
+//      assignment_operator: true if '=' is used to assign variables not compare values (input)
+void display_token(const Token& token, const DisplayOption disp_option, String& display, const bool assignment_operator = true) {
+    const TokenKey token_key = std::get<TokenKey>(token[0]);
 
-    Integer(int n) : number(n) {}
+    switch (token_key) {
+        case TokenKey::Let:
+            if (disp_option == Subset) {
+                display = "<keyword>";
+            } else {
+                display = "let";
+            }
+            break;
 
-    Integer(const Integer& other) : number(other.number) {}
-    
-    void _disp(String& result) {
-        result = std::to_string(number);
-        return;
+        case TokenKey::Now:
+            if (disp_option == Subset) {
+                display = "<keyword>";
+            } else {
+                display = "now";
+            }
+            break;
+
+        case TokenKey::Int:
+            if (disp_option == Literal) {
+                int n = std::get<int>(token[1]);
+                display = std::to_string(n);
+            } else if (disp_option == Key) {
+                display = "<integer>";
+            } else {
+                display = "<number>";
+            }
+            break;
+
+        case TokenKey::Bool:
+            if (disp_option == Literal) {
+                bool b = std::get<int>(token[1]);
+                display = b ? "true" : "false";
+            } else {
+                display = "<boolean>";
+            }
+            break;
+
+        case TokenKey::Plus:
+            if (disp_option == Literal) {
+                display = "+";
+            } else if (disp_option == Key) {
+                display = "<additive operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Minus:
+            if (disp_option == Literal) {
+                display = "-";
+            } else if (disp_option == Key) {
+                display = "<additive operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Mult:
+            if (disp_option == Literal) {
+                display = "*";
+            } else if (disp_option == Key) {
+                display = "<multiplicative operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Div:
+            if (disp_option == Literal) {
+                display = "/";
+            } else if (disp_option == Key) {
+                display = "<multiplicative operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Exp:
+            if (disp_option == Subset) {
+                display = "<binary operator>";
+            } else {
+                display = "**";
+            }
+            break;
+        
+        case TokenKey::And:
+            if (disp_option == Literal) {
+                display = "&";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Or:
+            if (disp_option == Literal) {
+                display = "|";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Not:
+            if (disp_option == Literal) {
+                display = "!";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<unary operator>";
+            }
+            break;
+
+        case TokenKey::Greater:
+            if (disp_option == Literal) {
+                display = ">";
+            } else if (disp_option == Key) {
+                display = "<comparison operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Less:
+            if (disp_option == Literal) {
+                display = "<";
+            } else if (disp_option == Key) {
+                display = "<comparison operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Var:
+            if (disp_option == Literal) {
+                display = std::get<String>(token[1]);
+            } else {
+                display = "<variable>";
+            }
+            break;
+
+        case TokenKey::Equals:
+            if (assignment_operator || (disp_option == Literal)) {
+                display = "=";
+            } else if (disp_option == Key) {
+                display = "<comparison operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::LeftPar:
+            display = "(";
+            break;
+
+        case TokenKey::RightPar:
+            display = ")";
+            break;
+
+        case TokenKey::Nothing:
+            display = "nothing";
+            break;
+
+        default:
+            display = "<UNKNWON TOKEN>";
     }
+
+    return;
+}
+
+// Return value output overload of the above function.
+String display_token(const Token& token, const DisplayOption disp_option, const bool assignment_operator = true) {
+    String result;
+
+    display_token(token, disp_option, result, assignment_operator);
+
+    return result;
+}
+
+// Parent struct for all data.
+struct Data {
+    protected:
+        virtual String disp(const DisplayOption option) const = 0;
+        virtual ~Data() = default;
+};
+
+// Struct for an Integer node.
+struct Integer : Data {
+    private:
+        int number;
+
+    public:
+        Integer() : number(0) {}
+        Integer(int n) : number(n) {}
+        Integer(const Integer& other) : number(other.number) {}
+        
+        int get_number() {
+            return number;
+        }
+
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return std::to_string(number);
+                case Key:
+                    return "<integer>";
+                default:
+                    return "<number>";
+            }
+        }
 };
 
 // Struct for a Boolean node.
-struct Boolean {
-    bool boolean;
+struct Boolean : Data {
+    private:
+        bool boolean;
 
-    Boolean() : boolean(false) {}
+    public:
+        Boolean() : boolean(false) {}
+        Boolean(bool b) : boolean(b) {}
+        Boolean(const Boolean& other) : boolean(other.boolean) {}
 
-    Boolean(bool b) : boolean(b) {}
+        bool get_boolean() {
+            return boolean;
+        }
 
-    Boolean(const Boolean& other) : boolean(other.boolean) {}
-
-    void _disp(String& result) {
-        result = boolean ? "true" : "false";
-        return;
-    }
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return boolean ? "true" : "false";
+                default:
+                    return "<boolean>";
+            } 
+        }
 };
 
 // Struct for a Variable node.
-struct Variable {
-    String variable;
+struct Variable : Data {
+    private:
+        String variable;
 
-    Variable() : variable("") {}
+    public:
+        Variable() : variable("") {}
+        Variable(String var) : variable(var) {}
+        Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
 
-    Variable(String var) : variable(var) {}
-    
-    Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
+        String& get_variable() {
+            return variable;
+        }
 
-    Variable(const Variable& other) : variable(other.variable) {}
-
-    void _disp(String& result) {
-        result = variable;
-        return;
-    }
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return variable;
+                default:
+                    return "<variable>";
+            }
+        }
 };
 
 // Struct for a unary operator node.
-struct UnaryOperator {
-    TokenKey op;
-    Action expression;
+struct UnaryOperator : Data {
+    private:
+        TokenKey op;
+        Action expression;
 
-    UnaryOperator() : op(Nothing), expression() {}
+    public:
+        UnaryOperator() : op(Nothing), expression() {}
+        UnaryOperator(TokenKey op, Action e) : op(op), expression(e) {}
+        UnaryOperator(UnaryOperator&& other) noexcept : op(other.op),
+            expression(std::move(other.expression)) {}
+    
+        Action& get_expression() {
+            return expression;
+        }
 
-    UnaryOperator(TokenKey op, Action e) : op(op), expression(e) {}
+        TokenKey get_op() {
+            return op;
+        }
 
-    UnaryOperator(UnaryOperator&& other) noexcept : op(other.op),
-        expression(std::move(other.expression)) {}
-
-    UnaryOperator(const UnaryOperator& other) : 
-        op(other.op), expression(other.expression) {}
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return display_token({op}, Literal);
+                default:
+                    return "<unary operator>";
+            }
+        }
 };
 
 // Struct for a binary operator node.
-struct BinaryOperator {
-    TokenKey op;
-    Action expression1, expression2;
+struct BinaryOperator : Data {
+    private:
+        TokenKey op;
+        Action expression1, expression2;
 
-    BinaryOperator() : op(Nothing), expression1(), expression2() {}
+    public:
+        BinaryOperator() : op(Nothing), expression1(), expression2() {}
+        BinaryOperator(TokenKey op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
+        BinaryOperator(BinaryOperator&& other) noexcept : op(other.op),
+            expression1(std::move(other.expression1)),
+            expression2(std::move(other.expression2)) {}
 
-    BinaryOperator(TokenKey op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
+        Action& get_expression1() {
+            return expression1;
+        }
 
-    BinaryOperator(BinaryOperator&& other) noexcept : op(other.op),
-        expression1(std::move(other.expression1)),
-        expression2(std::move(other.expression2)) {}
+        Action& get_expression2() {
+            return expression2;
+        }
 
-    BinaryOperator(const BinaryOperator& other) : 
-        op(other.op), expression1(other.expression1), 
-        expression2(other.expression2) {}
+        TokenKey get_op() {
+            return op;
+        }
+
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return display_token({op}, Literal);
+                default:
+                    return "<binary operator>";
+            }
+        }
 };
 
 // Struct for a ternary operator node.
-struct TernaryOperator {
-    TokenKey op;
-    Action expression1, expression2, expression3;
+struct TernaryOperator : Data {
+    private:
+        TokenKey op;
+        Action expression1, expression2, expression3;
 
-    TernaryOperator() : op(Nothing), expression1(), expression2(), expression3() {}
+    public:
+        TernaryOperator() : op(Nothing), expression1(), expression2(), expression3() {}
+        TernaryOperator(TokenKey op, Action e1, Action e2, Action e3) 
+            : op(op), expression1(e1), expression2(e2), expression3(e3) {}
+        TernaryOperator(TernaryOperator&& other) noexcept : op(other.op),
+            expression1(std::move(other.expression1)),
+            expression2(std::move(other.expression2)),
+            expression3(std::move(other.expression3)) {}
 
-    TernaryOperator(TokenKey op, Action e1, Action e2, Action e3) 
-        : op(op), expression1(e1), expression2(e2), expression3(e3) {}
+        Action& get_expression1() {
+            return expression1;
+        }
 
-    TernaryOperator(TernaryOperator&& other) noexcept : op(other.op),
-        expression1(std::move(other.expression1)),
-        expression2(std::move(other.expression2)),
-        expression3(std::move(other.expression3)) {}
+        Action& get_expression2() {
+            return expression2;
+        }
 
-    TernaryOperator(const TernaryOperator& other) 
-        : op(other.op), expression1(other.expression1), 
-        expression2(other.expression2), expression3(other.expression3) {}
+        Action& get_expression3() {
+            return expression3;
+        }
+
+        TokenKey get_op() {
+            return op;
+        }
+
+        String disp(const DisplayOption option) const override {
+            switch (option) {
+                case Literal:
+                    return display_token({op}, Literal);
+                default:
+                    return "<ternary operator>";
+            }
+        }
 };
 
 // Struct for an assignment node.
-struct Assign {
-    String variable;
-    Action expression;
+struct Assign : Data {
+    private:
+        String variable;
+        Action expression;
 
-    Assign() : variable(""), expression() {}
+    public:
+        Assign() : variable(""), expression() {}
+        Assign(const String& v, const Action& e) : variable(v), expression(e) {}
+        Assign(Assign&& other) : variable(std::move(other.variable)), 
+            expression(std::move(other.expression)) {}
+    
+        String& get_variable() {
+            return variable;
+        }
 
-    Assign(const String& v, const Action& e) : variable(v), expression(e) {}
+        Action& get_expression() {
+            return expression;
+        }
 
-    Assign(Assign&& other) : variable(std::move(other.variable)), 
-        expression(std::move(other.expression)) {}
-
-    Assign(const Assign& other) : variable(other.variable), expression(other.expression) {}
+        String disp(const DisplayOption option = Literal) const override {
+            return "<assignment>";
+        }
 };
 
 // Struct for a reassignment node.
-struct Reassign {
-    String variable;
-    Action expression;
-    bool implicit;
+struct Reassign : Data {
+    private:
+        String variable;
+        Action expression;
+        bool implicit;
 
-    Reassign() : variable(""), expression(), implicit(false) {}
+    public:
+        Reassign() : variable(""), expression(), implicit(false) {}
+        Reassign(String v, Action e, bool i) : variable(v), expression(e), implicit(i) {}
+        Reassign(Reassign&& other) : variable(std::move(other.variable)), 
+            expression(std::move(other.expression)), implicit(other.implicit) {}
 
-    Reassign(String v, Action e, bool i) : variable(v), expression(e), implicit(i) {}
+        String& get_variable() {
+            return variable;
+        }
 
-    Reassign(Reassign&& other) : variable(std::move(other.variable)), 
-        expression(std::move(other.expression)), implicit(other.implicit) {}
+        Action& get_expression() {
+            return expression;
+        }
 
-    Reassign(const Reassign& other) : variable(other.variable), expression(other.expression), implicit(other.implicit) {}
+        bool get_implicit() {
+            return implicit;
+        }
+
+        String disp(const DisplayOption option = Literal) const override {
+            return implicit ? "<implicit reassignment>" : "<reassignment>";
+        }
 };
 
 #endif

@@ -28,7 +28,7 @@ ImplicitAssignment -> '<var>' '=' InlineIfStatement
 
 InlineIfStatement -> Expression 'if' OrExpr 'else' InlineIfStatement | Expression
 
-Expression -> 'nothing' | OrExpr 
+Expression -> OrExpr 
 
 BOOLEAN ARITHMETIC:
 

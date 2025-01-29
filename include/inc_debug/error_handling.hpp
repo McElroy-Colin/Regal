@@ -1,11 +1,11 @@
 // Header file containing custom error structures for debugging compiler source code.
 
 #include "../inc_langdef/langdef.hpp"
-#include "meta_code.hpp"
 
 #ifndef ERROR_HANDLING_HPP
 #define ERROR_HANDLING_HPP
 
+// TODO: update error throws (they chain currently with messages)
 
 // Error class representing severe logic mistakes in compiler code. These should never throw.
 class FatalError : public std::runtime_error {
@@ -149,8 +149,8 @@ class InavlidOperatorError : public IncorrectInputError {
 //          data_type: data using the operator (input)
 //          op: operator token key being used incorrectly (input)
         InavlidOperatorError(const Action& data_type, const TokenKey op)
-            : IncorrectInputError("InvalidOperatorError: " + display_action(data_type, Literal) + " using \'" 
-                + display_token({op}, Literal, false) + "\' operator") {}
+            : IncorrectInputError("InvalidOperatorError: " + std::visit([](const auto& d) { return d->disp(Literal); }, data_type) 
+            + " using \'" + display_token({op}, Literal, false) + "\' operator") {}
 
 //      Constructor to handle an operator taking invalid data. 
 //          op: operator token key being used incorrectly (input)
@@ -188,7 +188,8 @@ class TypeMismatchError : public IncorrectInputError {
             : IncorrectInputError("TypeMismatchError: \'" + display_token({op}, Literal, false) + "\' operator mismatched types") {}
 
         TypeMismatchError(Action& data_type) 
-            : IncorrectInputError("TypeMismatchError: if statement expected a boolean condition but received " + display_action(data_type, Literal)) {}
+            : IncorrectInputError("TypeMismatchError: if statement expected a boolean condition but received " 
+            + std::visit([](const auto& d) { return d->disp(Literal); }, data_type)) {}
 };
 
 // Error class representing an implicit reassignment type mismatch error.
