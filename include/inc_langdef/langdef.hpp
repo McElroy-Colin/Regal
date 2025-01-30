@@ -30,8 +30,8 @@ enum TokenKey {
     Var,
     Equals,
 
-//  Groupers
-    LeftPar, RightPar,
+//  Miscellaneous
+    LeftPar, RightPar, Newline,
 
 //  Nothing token for debug purposes.
     Nothing
@@ -46,6 +46,8 @@ std::vector<TokenKey> number_tokens = {Int};
 using Token = std::vector<std::variant<TokenKey, int, String>>;
 
 // AST node definitions.
+struct CodeBlock;
+
 struct Integer;
 struct Boolean;
 struct Variable;
@@ -57,6 +59,8 @@ struct Reassign;
 
 // Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
 using Action = std::variant<
+    std::shared_ptr<CodeBlock>,
+
     std::shared_ptr<Integer>, 
     std::shared_ptr<Boolean>, 
     std::shared_ptr<Variable>, 
@@ -246,6 +250,10 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
         case TokenKey::Nothing:
             display = "nothing";
             break;
+        
+        case TokenKey::Newline:
+            display = "<newline>";
+            break;
 
         default:
             display = "<UNKNWON TOKEN>";
@@ -263,11 +271,39 @@ String display_token(const Token& token, const DisplayOption disp_option, const 
     return result;
 }
 
+
 // Parent struct for all data.
 struct Data {
     protected:
         virtual String disp(const DisplayOption option) const = 0;
         virtual ~Data() = default;
+};
+
+// Struct for a block of code
+struct CodeBlock : Data {
+    private:
+        Action curr_operation, remainder;
+
+    public:
+        CodeBlock() : curr_operation(), remainder() {}
+        CodeBlock(Action& curr_op, Action& rem) 
+            : curr_operation(curr_op), remainder(rem) {}
+        CodeBlock(const CodeBlock&& other)
+            : curr_operation(std::move(other.curr_operation)),
+            remainder(std::move(other.remainder)) {}
+
+        Action& get_operation() {
+            return curr_operation;
+        }
+
+        Action& get_remainder() {
+            return remainder;
+        }
+
+        String disp(const DisplayOption option) const override {
+            return std::visit([](const auto& d) { return d->disp(Literal); }, curr_operation);
+        }
+
 };
 
 // Struct for an Integer node.

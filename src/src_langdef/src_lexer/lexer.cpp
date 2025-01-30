@@ -7,7 +7,7 @@
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {
 
-    #define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f')
+    #define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f') 
     #define is_integer(c) (c >= '0') && (c <= '9')
     #define is_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || is_integer(c)
 
@@ -15,10 +15,11 @@ namespace {
 //  Return the index succeeding the final whitespace character.
 //      line: the line of code (input)
 //      string_index: the first index to match with whitespace (input)
-    int _match_whitespace(const String& line, const int string_index) {
+    int _match_whitespace(const String& line, const int string_index, const bool match_newlines = false) {
         int whitespace_index;
 
-        for (whitespace_index = string_index; is_whitespace(line[whitespace_index]); whitespace_index++);
+        for (whitespace_index = string_index; is_whitespace(line[whitespace_index]) 
+                || (match_newlines && (line[whitespace_index] == '\n')); whitespace_index++);
         return whitespace_index;
     }
 
@@ -90,11 +91,8 @@ void lex_string(String& line, std::list<Token>& token_list) {
     int string_index = 0;
 
     while (string_index < line.size()) {
-        if (line[string_index] == '\n') {
-            return; // end lexing at the end of a line TEMP
-
 //      Bypass whitespace characters between tokens.
-        } else if (is_whitespace(line[string_index])) {
+        if (is_whitespace(line[string_index])) {
             string_index = _match_whitespace(line, string_index);
 
         } else if (is_integer(line[string_index])) {
@@ -164,70 +162,76 @@ void lex_string(String& line, std::list<Token>& token_list) {
         } else {
 //          Switch statement for single character tokens.
             switch (line[string_index]) {
-                case '=': {
+                case '\n': 
+                    token_list.push_back({ Newline });
+
+                    string_index = _match_whitespace(line, string_index, true);
+                    break;
+                
+                case '=':
                     token_list.push_back({ Equals });
                     string_index++;
                     break;
-                }
-                case '+': {
+
+                case '+':
                     token_list.push_back({ Plus });
                     string_index++;
                     break;
-                }
-                case '-': {
+                
+                case '-':
                     token_list.push_back({ Minus });
                     string_index++;
                     break;
-                }
-                case '/': {
+                
+                case '/':
                     token_list.push_back({ Div });
                     string_index++;
                     break;
-                }
-                case '*': {
+                
+                case '*':
                     token_list.push_back({ Mult });
                     string_index++;
                     break;
-                }
-                case '&': {
+                
+                case '&':
                     token_list.push_back({ And });
                     string_index++;
                     break;
-                }
-                case '|': {
+            
+                case '|':
                     token_list.push_back({ Or });
                     string_index++;
                     break;
-                }
-                case '!': {
+                
+                case '!':
                     token_list.push_back({ Not });
                     string_index++;
                     break;
-                }
-                case '>': {
+                
+                case '>':
                     token_list.push_back({ Greater });
                     string_index++;
                     break;
-                }
-                case '<': {
+                
+                case '<':
                     token_list.push_back({ Less });
                     string_index++;
                     break;
-                }
-                case '(': {
+            
+                case '(':
                     token_list.push_back({ LeftPar });
                     string_index++;
                     break;
-                }
-                case ')': {
+                
+                case ')':
                     token_list.push_back({ RightPar });
                     string_index++;
                     break;
-                }
-                default: {
+                
+                default:
 //                  Handle unrecognized token.
                     throw UnrecognizedInputError(line, string_index);
-                }
+                
             }
         }
     }

@@ -39,11 +39,20 @@ namespace {
 //      action: action to be optimized (input/output)
 //      var_stack: stack containing initialized variables (input)
 bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
-    if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
+    if (std::holds_alternative<std::shared_ptr<CodeBlock>>(action)) { // CodeBlock
+        std::shared_ptr<CodeBlock> code_block = std::move(std::get<std::shared_ptr<CodeBlock>>(action));
+
+        optimize_action(code_block->get_operation(), var_stack);
+        optimize_action(code_block->get_remainder(), var_stack);
+
+        action = std::move(code_block);
+
+        return false;
+
+    } else if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
         return false;
     } else if (std::holds_alternative<std::shared_ptr<Boolean>>(action)) { // Boolean
         return false;
-
     } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) { // Variable
         std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
         const String& variable = var_action->get_variable();
@@ -219,6 +228,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case Equals:
             case Is:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());
@@ -244,7 +254,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         std::shared_ptr<TernaryOperator> ternary_op = std::move(std::get<std::shared_ptr<TernaryOperator>>(action));
 
         optimize_action(ternary_op->get_expression1(), var_stack);
-        optimize_action(ternary_op->get_expression2(), var_stack);
+         optimize_action(ternary_op->get_expression2(), var_stack);
         optimize_action(ternary_op->get_expression3(), var_stack);
 
         switch (ternary_op->get_op()) {
@@ -269,13 +279,43 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
     } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
-        optimize_action(std::get<std::shared_ptr<Assign>>(action)->get_expression(), var_stack);
+        std::shared_ptr<Assign> var_action = std::move(std::get<std::shared_ptr<Assign>>(action));
+        optimize_action(var_action->get_expression(), var_stack);
+
+//      Check if the given variable has already been initialized.
+        auto iter = var_stack.find(var_action->get_variable());
+        if (iter != var_stack.end()) {
+            throw VariablePreInitializedError(var_action->get_variable());
+        }
+
+        var_stack[var_action->get_variable()] = std::move(var_action->get_expression());
+
+        action = std::move(var_action);
             
-        return true;
+        return false;
     } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Reassign
-        optimize_action(std::get<std::shared_ptr<Reassign>>(action)->get_expression(), var_stack);
+        std::shared_ptr<Reassign> var_action = std::move(std::get<std::shared_ptr<Reassign>>(action));
+
+//      Locate the given variable in the stack.
+        auto iter = var_stack.find(var_action->get_variable());
+        if (iter == var_stack.end()) {
+            throw VariableNotInitializedError(var_action->get_variable());
+        }
+
+        optimize_action(var_action->get_expression(), var_stack);
+
+//      Type check reassignment whether it is implicit or not.
+        if ((var_action->get_implicit()) && (type_mismatch(var_stack[var_action->get_variable()], var_action->get_expression()))) {
+            throw ImplicitMismatchError(var_action->get_variable());
+        } else if ((!var_action->get_implicit()) && (!type_mismatch(var_stack[var_action->get_variable()], var_action->get_expression()))) {
+            throw ExplicitMismatchError(var_action->get_variable());
+        }
+
+        var_stack[var_action->get_variable()] = std::move(var_action->get_expression());
+
+        action = std::move(var_action);
             
-        return true;
+        return false;
     }
     
     throw FatalError("optimization failed");

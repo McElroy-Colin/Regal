@@ -33,6 +33,10 @@ Value tokens:
 
 Operator tokens:
 
+    'if': Keyword for if-else blocks.
+
+    'else': Keyword in if-else blocks.
+
     '+': Adds two numbers.
 
     '-': Subtracts two numbers.
@@ -62,6 +66,4 @@ Special tokens:
 
     ')': Closes expression groupings.
 
-    'nothing': The equivalent of 'NULL', 'nil', or '()' in other languages.
-
-    '\n': The newline character separates statements.
+    '\n': The newline character separates operations.
