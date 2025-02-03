@@ -49,6 +49,8 @@ Operator tokens:
 
     '|' / 'or': Logical OR operation for two boolean values.
 
+    '||' / 'xor': Logical XOR operation for two boolean values.
+
     '&' / 'and': Logical AND operation for two boolean values.
 
     '!' / 'not': Logical NOT operation for a boolean value.

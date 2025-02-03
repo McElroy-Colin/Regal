@@ -24,6 +24,7 @@ Action parse_expression(std::list<Token>& token_list);
 
 // BOOLEAN ARITHMETIC:
 Action parse_or_expression(std::list<Token>& token_list);
+Action parse_exclusive_or_expression(std::list<Token>& token_list);
 Action parse_and_expression(std::list<Token>& token_list);
 Action parse_not_expression(std::list<Token>& token_list);
 Action parse_comparison_expression(std::list<Token>& token_list);
@@ -300,16 +301,16 @@ Action parse_expression(std::list<Token>& token_list) {
     return parse_or_expression(token_list);
 }
 
-// The following three functions establish boolean order of operations in Regal. 
+// The following four functions establish boolean order of operations in Regal. 
 // These functions are coded one-to-one with the Regal CFG.
 
 // Parse a boolean expression potentially containing '|' or 'or'.
 //      token_list: linked list of remaining tokens (input)
 Action parse_or_expression(std::list<Token>& token_list) {
-    Action and_expression;
+    Action xor_expression;
 
 //  Parse and store the expression before '|' or 'or'.
-    and_expression = parse_and_expression(token_list);
+    xor_expression = parse_exclusive_or_expression(token_list);
 
     if (_lookahead(token_list, Or)) {
         Action or_expression;
@@ -319,7 +320,29 @@ Action parse_or_expression(std::list<Token>& token_list) {
 //      Parse and store the expression after '|' or 'or'.
         or_expression = parse_or_expression(token_list);
 
-        return std::make_shared<BinaryOperator>(Or, and_expression, or_expression);
+        return std::make_shared<BinaryOperator>(Or, xor_expression, or_expression);
+    }
+
+    return xor_expression;
+}
+
+// Parse a boolean expression potentially containing '||' or 'xor'.
+//      token_list: linked list of remaining tokens (input)
+Action parse_exclusive_or_expression(std::list<Token>& token_list) {
+    Action and_expression;
+
+//  Parse and store the expression before '||' or 'xor'.
+    and_expression = parse_and_expression(token_list);
+
+    if (_lookahead(token_list, Xor)) {
+        Action or_expression;
+
+        _match_bypass(token_list, Xor);
+
+//      Parse and store the expression after '||' or 'xor'.
+        or_expression = parse_or_expression(token_list);
+
+        return std::make_shared<BinaryOperator>(Xor, and_expression, or_expression);
     }
 
     return and_expression;

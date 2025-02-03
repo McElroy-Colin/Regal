@@ -24,7 +24,7 @@ enum TokenKey {
     Int, Bool,
 
 //  Primitive Operators
-    Plus, Minus, Mult, Div, Exp, And, Or, Not, Greater, Less, Is, /*Equals,*/ 
+    Plus, Minus, Mult, Div, Exp, And, Or, Xor, Not, Greater, Less, Is, /*Equals,*/ 
 
 //  Variables
     Var,
@@ -184,6 +184,16 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
         case TokenKey::Or:
             if (disp_option == Literal) {
                 display = "|";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Xor:
+            if (disp_option == Literal) {
+                display = "||";
             } else if (disp_option == Key) {
                 display = "<boolean operator>";
             } else {

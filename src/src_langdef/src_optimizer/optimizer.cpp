@@ -228,6 +228,20 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case Xor:
+                if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
+                    throw TypeMismatchError(binary_op->get_op());
+                }
+
+                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->get_expression1())) {
+                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression1()));
+                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression2()));
+                    action = std::make_shared<Boolean>(bool1->get_boolean() ^ bool2->get_boolean());
+                } else {
+                    throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
+                }
+                return true;
+
             case Equals:
             case Is:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {

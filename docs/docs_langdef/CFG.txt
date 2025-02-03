@@ -37,8 +37,11 @@ Expression -> OrExpr
 
 BOOLEAN ARITHMETIC:
 
-    OrExpr -> AndExpr '<or_op>' OrExpr | AndExpr
+    OrExpr -> ExclusiveOrExpr '<or_op>' OrExpr | ExclusiveOrExpr
         <or_op> is '|' or 'or'
+
+    ExclusiveOrExpr -> AndExpr '<xor_op>' ExclusiveOrExpr | AndExpr
+        <xor_op> is '||' or 'xor'
 
     AndExpr -> NotExpr '<and_op>' AndExpr | NotExpr
         <and_op> is '&' or 'and'
