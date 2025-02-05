@@ -76,6 +76,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         optimize_action(unary_op->get_expression(), var_stack);
 
         switch (unary_op->get_op()) {
+            case NotW:
             case Not: {
                 if (!std::holds_alternative<std::shared_ptr<Boolean>>(unary_op->get_expression())) { // Boolean
                     throw InavlidOperatorError(unary_op->get_expression(), Not);
@@ -200,6 +201,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case AndW:
             case And:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());
@@ -214,6 +216,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case OrW:
             case Or:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());
@@ -228,6 +231,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                 }
                 return true;
 
+            case XorW:
             case Xor:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());

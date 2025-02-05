@@ -122,15 +122,15 @@ void lex_string(String& line, std::list<Token>& token_list) {
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "and", string_index, true)) > string_index) {
-            token_list.push_back({ And });
+            token_list.push_back({ AndW });
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "or", string_index, true)) > string_index) {
-            token_list.push_back({ Or });
+            token_list.push_back({ OrW });
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "xor", string_index, true)) > string_index) {
-            token_list.push_back({ Xor });
+            token_list.push_back({ XorW });
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "is", string_index, true)) > string_index) {
@@ -138,7 +138,7 @@ void lex_string(String& line, std::list<Token>& token_list) {
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "not", string_index, true)) > string_index) {
-            token_list.push_back({ Not });
+            token_list.push_back({ NotW });
             string_index = matched_index;
 
         } else if ((matched_index = _match_token(line, "true", string_index, true)) > string_index) {

@@ -5,6 +5,7 @@
 new_pground/
 personal_folder/
 boned_copy/
+Makefile
 
 # System files
 *.vscode

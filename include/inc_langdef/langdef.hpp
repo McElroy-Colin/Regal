@@ -18,13 +18,19 @@ using String = std::string;
 // Enum for all tokens in Regal.
 enum TokenKey {
 //  Keywords
-    Let, Now, If, Else,
+    Let, Now, 
 
 //  Primitive data types
     Int, Bool,
 
-//  Primitive Operators
-    Plus, Minus, Mult, Div, Exp, And, Or, Xor, Not, Greater, Less, Is, /*Equals,*/ 
+//  Unary Operators
+    Not, NotW,
+
+//  Binary Operators
+    Plus, Minus, Mult, Div, Exp, And, AndW, Or, OrW, Xor, XorW,  Greater, Less, Is, /*Equals,*/ 
+
+//  Ternary Operators
+    If, Else,
 
 //  Variables
     Var,
@@ -181,9 +187,29 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
             }
             break;
 
+        case TokenKey::AndW:
+            if (disp_option == Literal) {
+                display = "and";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
         case TokenKey::Or:
             if (disp_option == Literal) {
                 display = "|";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::OrW:
+            if (disp_option == Literal) {
+                display = "or";
             } else if (disp_option == Key) {
                 display = "<boolean operator>";
             } else {
@@ -201,9 +227,29 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
             }
             break;
 
+        case TokenKey::XorW:
+            if (disp_option == Literal) {
+                display = "xor";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
         case TokenKey::Not:
             if (disp_option == Literal) {
                 display = "!";
+            } else if (disp_option == Key) {
+                display = "<boolean operator>";
+            } else {
+                display = "<unary operator>";
+            }
+            break;
+
+        case TokenKey::NotW:
+            if (disp_option == Literal) {
+                display = "not";
             } else if (disp_option == Key) {
                 display = "<boolean operator>";
             } else {
@@ -242,6 +288,16 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
         case TokenKey::Equals:
             if (assignment_operator || (disp_option == Literal)) {
                 display = "=";
+            } else if (disp_option == Key) {
+                display = "<comparison operator>";
+            } else {
+                display = "<binary operator>";
+            }
+            break;
+
+        case TokenKey::Is:
+            if (disp_option == Literal) {
+                display = "is";
             } else if (disp_option == Key) {
                 display = "<comparison operator>";
             } else {

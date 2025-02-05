@@ -308,19 +308,25 @@ Action parse_expression(std::list<Token>& token_list) {
 //      token_list: linked list of remaining tokens (input)
 Action parse_or_expression(std::list<Token>& token_list) {
     Action xor_expression;
+    std::vector<TokenKey> or_operators;
 
 //  Parse and store the expression before '|' or 'or'.
     xor_expression = parse_exclusive_or_expression(token_list);
 
-    if (_lookahead(token_list, Or)) {
+    or_operators = {Or, OrW};
+    if (_lookahead_any(token_list, or_operators)) {
         Action or_expression;
+        Token operator_token;
+        TokenKey operator_key;
 
-        _match_bypass(token_list, Or);
+//      Bypass and store the OR operator.
+        _query_bypass_any(token_list, or_operators, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Parse and store the expression after '|' or 'or'.
         or_expression = parse_or_expression(token_list);
 
-        return std::make_shared<BinaryOperator>(Or, xor_expression, or_expression);
+        return std::make_shared<BinaryOperator>(operator_key, xor_expression, or_expression);
     }
 
     return xor_expression;
@@ -330,19 +336,25 @@ Action parse_or_expression(std::list<Token>& token_list) {
 //      token_list: linked list of remaining tokens (input)
 Action parse_exclusive_or_expression(std::list<Token>& token_list) {
     Action and_expression;
+    std::vector<TokenKey> xor_operators;
 
 //  Parse and store the expression before '||' or 'xor'.
     and_expression = parse_and_expression(token_list);
 
-    if (_lookahead(token_list, Xor)) {
+    xor_operators = {Xor, XorW};
+    if (_lookahead_any(token_list, xor_operators)) {
         Action or_expression;
+        Token operator_token;
+        TokenKey operator_key;
 
-        _match_bypass(token_list, Xor);
+//      Bypass and store the XOR operator.
+        _query_bypass_any(token_list, xor_operators, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Parse and store the expression after '||' or 'xor'.
         or_expression = parse_or_expression(token_list);
 
-        return std::make_shared<BinaryOperator>(Xor, and_expression, or_expression);
+        return std::make_shared<BinaryOperator>(operator_key, and_expression, or_expression);
     }
 
     return and_expression;
@@ -352,19 +364,25 @@ Action parse_exclusive_or_expression(std::list<Token>& token_list) {
 //      token_list: linked list of remaining tokens (input)
 Action parse_and_expression(std::list<Token>& token_list) {
     Action not_expression;
+    std::vector<TokenKey> and_operators;
 
 //  Parse and store the expression potentially containing '&' or 'and'.
     not_expression = parse_not_expression(token_list);
 
-    if (_lookahead(token_list, And)) {
+    and_operators = {And, AndW};
+    if (_lookahead_any(token_list, and_operators)) {
         Action and_expression;
+        Token operator_token;
+        TokenKey operator_key;
 
-        _match_bypass(token_list, And);
+//      Bypass and store the AND operator.
+        _query_bypass_any(token_list, and_operators, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Parse and store the expression after '&' or 'and'.
         and_expression = parse_and_expression(token_list);
 
-        return std::make_shared<BinaryOperator>(And, not_expression, and_expression);
+        return std::make_shared<BinaryOperator>(operator_key, not_expression, and_expression);
     }
 
     return not_expression;
@@ -373,15 +391,20 @@ Action parse_and_expression(std::list<Token>& token_list) {
 // Parse a boolean expression potentially containing '!' or 'not'.
 //      token_list: linked list of remaining tokens (input)
 Action parse_not_expression(std::list<Token>& token_list) {
-    if (_lookahead(token_list, Not)) {
+    std::vector<TokenKey> not_operators = {Not, NotW};
+    if (_lookahead_any(token_list, not_operators)) {
         Action comparison_expression;
+        Token operator_token;
+        TokenKey operator_key;
 
-        _match_bypass(token_list, Not);
+//      Bypass and store the AND operator.
+        _query_bypass_any(token_list, not_operators, operator_token);
+        operator_key = std::get<TokenKey>(operator_token[0]);
 
 //      Parse and store the expression after '!' or 'not'.
         comparison_expression = parse_comparison_expression(token_list);
 
-        return std::make_shared<UnaryOperator>(Not, comparison_expression);
+        return std::make_shared<UnaryOperator>(operator_key, comparison_expression);
     }
 
     return parse_comparison_expression(token_list);
