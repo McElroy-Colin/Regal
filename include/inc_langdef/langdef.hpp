@@ -38,7 +38,7 @@ enum TokenKey {
     Bind,
 
 //  Miscellaneous
-    LeftPar, RightPar, Whitespace, Newline, 
+    LeftPar, RightPar, Newline, 
 
 //  Nothing token for debug purposes.
     Nothing
@@ -455,27 +455,6 @@ struct Variable : Data {
             }
         }
 };
-
-/*
-// Struct for whitespace data.
-struct Whitespace : Data {
-    private:
-        String whitespace;
-    
-    public:
-        Whitespace() : whitespace(""){}
-        Whitespace(String w) : whitespace(w) {}
-        Whitespace(Whitespace&& other) noexcept : whitespace(std::move(other.whitespace)) {}
-
-        String& get_whitespace() {
-            return whitespace;
-        }
-
-        String disp(const DisplayOption option) const override {
-            return "";
-        }
-};
-*/
 
 // Struct for a unary operator node.
 struct UnaryOperator : Data {

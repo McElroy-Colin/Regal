@@ -9,29 +9,40 @@ constexpr int TAB_WIDTH = 4;
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {
 
-    #define is_whitespace(c) (c == ' ') || (c == '\t') || (c == '\r') || (c == '\f') 
+    #define is_whitespace(c) (c == ' ') || (c == '\t') 
     #define is_integer(c) (c >= '0') && (c <= '9')
     #define is_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || is_integer(c)
 
 //  Match sequential whitespace characters in the given string starting at the given index. 
-//  Return a pair with the index succeeding the final whitespace character and the total level of indentation.
+//  Return the index succeeding the final whitespace character.
 //      line: the line of code (input)
 //      string_index: the first index to match with whitespace (input)
-//      match_newlines: true if the newline character '\n' should also be matched (input)
-    std::pair<int, int> _match_whitespace(const String& line, const int string_index, const bool match_newlines = false) {
+    int _match_whitespace(const String& line, const int string_index) {
+        int whitespace_index;
+
+        for (whitespace_index = string_index; is_whitespace(line[whitespace_index]); whitespace_index++);
+        return whitespace_index;
+    }
+
+//  Match and count sequential whitespace characters, including newline, in the given string starting at the given index. 
+//  Return a pair with the index succeeding the final whitespace character and the amount of matched whitespace on the final line.
+//      line: the line of code (input)
+//      string_index: the first index to match with whitespace (input)
+    std::pair<int, int> _query_whitespace(const String& line, const int string_index) {
         int whitespace_index;
         int whitespace_count = 0;
 
-        for (whitespace_index = string_index; is_whitespace(line[whitespace_index]) 
-        || (match_newlines && (line[whitespace_index] == '\n')); whitespace_index++) {
+        for (whitespace_index = string_index; is_whitespace(line[whitespace_index]) || (line[whitespace_index] == '\n'); whitespace_index++) {
             if (line[whitespace_index] == '\t') {
                 whitespace_count += TAB_WIDTH;
             } else if (line[whitespace_index] == ' ') {
                 whitespace_count += 1;
-            } else if (match_newlines && (line[whitespace_index] == '\n')) {
+//          Whitespace is only counted on the final line of input.
+            } else if (line[whitespace_index] == '\n') {
                 whitespace_count = 0;
             }
         }
+
         return std::make_pair(whitespace_index, whitespace_count);
     }
 
@@ -45,6 +56,7 @@ namespace {
         int integer_index, integer_value;
 
         for (integer_index = string_index; is_integer(line[integer_index]); integer_index++);
+
         integer_value = stoi(line.substr(string_index, (integer_index - string_index)));
         integer_token = { integer_index, integer_value };
         return;
@@ -61,6 +73,7 @@ namespace {
         int label_index;
 
         for (label_index = string_index; is_label(line[label_index]); label_index++);
+
         label = line.substr(string_index, (label_index - string_index));
         label_token = { label_index, label };
         return;
@@ -71,24 +84,18 @@ namespace {
 //  returned index also succeeds any following whitespace if the given boolean is true.
 //      line: the line of code (input)
 //      string_index: the first index to match with a token (input)
-//      end_without_label: true if the matched token can be succeeded with anything that is not a label, 
+//      end_without_label: true if the matched token can be succeeded with anything that is not a label character, 
 //                         false if the token must be succeeded by whitespace (input)
     int _match_token(const String& line, const String& target, const int string_index, const bool end_without_label) {
         int word_index;
 
-        for (word_index = string_index; line[word_index] 
-            && (line[word_index] == target[word_index - string_index]); word_index++);
-        if (target[word_index - string_index]) {
-//          Return the original index if the entire target was not matched.
-            return string_index;
-        } else if (end_without_label) {
-            if (is_label(line[word_index])) {
-//              Return the original index if the token is succeeded with a label character.
-                return string_index;
-            }
+        for (word_index = string_index; line[word_index] && (line[word_index] == target[word_index - string_index]); word_index++);\
 
-            return _match_whitespace(line, word_index).first;
+        if ((target[word_index - string_index]) || (end_without_label && (is_label(line[word_index])))) {
+//          Return the original index if the entire target was not matched or if the target was succeeded with an illegal character.
+            return string_index;
         }
+
         return word_index;
     }
 
@@ -99,22 +106,16 @@ namespace {
 //      line: the line of code to lex (input)
 //      token_list: list of tokens from the given line (output)
 void lex_string(String& line, std::list<Token>& token_list) {
-    int matched_index, whitespace_count;
+    int matched_index, line_length;
 
 //  Match any whitespace preceding the first line of code.
-    std::pair<int, int> position_count = _match_whitespace(line, 0);
+    std::pair<int, int> position_count = _query_whitespace(line, 0);
     int string_index = position_count.first;
+    token_list.push_back({Newline, position_count.second});
 
-    if (string_index > 0) {
-        token_list.push_back({Whitespace, position_count.second});
-    }
-
-    while (string_index < line.size()) {
-//      Bypass whitespace characters between tokens.
-        if (is_whitespace(line[string_index])) {
-            string_index = _match_whitespace(line, string_index).first;
-
-        } else if (is_integer(line[string_index])) {
+    line_length = line.size();
+    while (string_index < line_length) {
+        if (is_integer(line[string_index])) {
             std::vector<int> position_integer; 
             _match_integer(line, string_index, position_integer);
 //          Include the integer value in the token.
@@ -194,15 +195,10 @@ void lex_string(String& line, std::list<Token>& token_list) {
 //          Switch statement for single character tokens.
             switch (line[string_index]) {
                 case '\n': {
-                    token_list.push_back({ Newline });
-
 //                  Match and count whitespace preceding a new line of code.
-                    std::pair<int, int> position_count = _match_whitespace(line, string_index, true);
+                    position_count = _query_whitespace(line, string_index);
                     string_index = position_count.first;
-
-                    if (position_count.second > 0) {
-                        token_list.push_back({Whitespace, position_count.second});
-                    }
+                    token_list.push_back({Newline, position_count.second});
 
                     break;
                 }              
@@ -269,9 +265,11 @@ void lex_string(String& line, std::list<Token>& token_list) {
                 default:
 //                  Handle unrecognized token.
                     throw UnrecognizedInputError(line, string_index);
-                
             }
         }
+
+//      Bypass whitespace (if any) after a matched token.
+        string_index = _match_whitespace(line, string_index);
     }
 
     return;

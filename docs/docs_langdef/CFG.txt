@@ -10,9 +10,15 @@ Context-Free Grammar that dictates order of syntax in Regal
     - The '|' symbol represents an OR branch.
 
 
-File -> '\n' CodeBlock | CodeBlock
+File -> '<0 indent>' HeaderOperation
 
-CodeBlock -> SingleOperation '\n' CodeBlock | SingleOperation '\n'
+HeaderOperation -> '\n' '<new indent>' IfStatement | CodeBlock
+
+IfStatement -> 'if' OrExpr '\n' '<new indent>' CodeBlock ElseBlock
+
+ElseBlock -> '<matched indent>' 'else' '\n' '<new indent>' CodeBlock | '<unmatched indent>' HeaderOperation
+
+CodeBlock -> SingleOperation '\n' '<matched_indent>' HeaderOperation | SingleOperation '\n' '<unmatched indent>' | SingleOperation '\n' 'EOF'
     <whitespace> is any number of whitespace characters
 
 SingleOperation -> Assignment

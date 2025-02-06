@@ -6,13 +6,18 @@
 
 // parsing function definitions coded with the CFG.
 Action parse_file(std::list<Token>& token_list);
-Action parse_code_block(std::list<Token>& token_list);
 
-Action parse_single_operation(std::list<Token>& token_list);
+Action parse_header_operation(std::list<Token>& token_list, int min_indent);
+Action parse_if_statement(std::list<Token>& token_list, int min_indent);
+Action parse_else_block(std::list<Token>& token_list, int min_indent);
+
+Action parse_block_indicator(std::list<Token>& token_list, int min_indent);
+Action parse_code_block(std::list<Token>& token_list, int min_indent);
+
+Action parse_single_operation(std::list<Token>& token_list, int min_indent);
 Action parse_assignment(std::list<Token>& token_list);
 Action parse_inline_if_statement(std::list<Token>& token_list);
 Action parse_single_operation(std::list<Token>& token_list);
-
 
 // VARIABLE ASSIGNMENT:
 Action parse_explicit_assignment(std::list<Token>& token_list);
@@ -133,41 +138,91 @@ namespace {
 // Generate and return an AST of Actions from a list of tokens.
 //      token_list: linked list of remaining tokens (input)
 Action parse_file(std::list<Token>& token_list) {
-    Action code_block;
+    Action header_operation;
+    Token newline_token;
 
-    if (_lookahead(token_list, Newline)) {
-        _match_bypass(token_list, Newline);
-    }
-    // Excess whitespace is handled during lexing.
-
-    code_block =  parse_code_block(token_list);
+    header_operation =  parse_header_operation(token_list, 0); 
 
     if (!token_list.empty()) {
         _match_bypass(token_list, Newline);
     }
 
-    //  Handle if there are more tokens after parsing.
+//  Handle if there are more tokens after parsing.
     token_list.empty() ?: throw UnexpectedInputError(token_list.front(), Literal);
 
-    return code_block;
+    return header_operation;
 }
 
-Action parse_code_block(std::list<Token>& token_list) {
+Action parse_header_operation(std::list<Token>& token_list, int min_indent) {
+    Token newline_token;
+
+    _query_bypass(token_list, Newline, newline_token);
+
+    if (_lookahead(token_list, If)) {
+        return parse_if_statement(token_list, std::get<int>(newline_token[1]));
+    }
+
+    return parse_block_indicator(token_list, min_indent);
+}
+
+Action parse_if_statement(std::list<Token>& token_list, int min_indent) {
+    Action or_expression, code_block, else_block;
+    Token newline_token;
+    int new_indent;
+
+    _match_bypass(token_list, If);
+
+    or_expression = parse_or_expression(token_list);
+
+    _query_bypass(token_list, Newline, newline_token);
+    new_indent = std::get<int>(newline_token[1]);
+    
+    if (new_indent < min_indent) {
+        throw std::runtime_error("not indented enough on 'if' LORDY");
+    }
+
+    code_block = parse_code_block(token_list, min_indent);
+    else_block = parse_else_block(token_list, min_indent);
+
+    return std::make_shared<BinaryOperator>(If, or_expression, code_block);
+}
+
+Action parse_else_block(std::list<Token>& token_list, int min_indent) {
+    Action code_block;
+    Token newline_token;
+    int new_indent;
+
+    _match_bypass(token_list, Else);
+    _query_bypass(token_list, Newline, newline_token);
+    new_indent = std::get<int>(newline_token[1]);
+
+    if (new_indent < min_indent) {
+        return parse_header_operation(token_list, new_indent); // should be the operations indent
+    }
+
+    return parse_code_block(token_list, min_indent);
+}
+
+Action parse_block_indicator(std::list<Token>& token_list, int min_indent) {
+
+}
+
+Action parse_code_block(std::list<Token>& token_list, int min_indent) {
     Action single_operation;
 
     single_operation = parse_single_operation(token_list);
 
     if (_lookahead(token_list, Newline)) {
         Action code_block;
+        Token newline_token;
 
-        _match_bypass(token_list, Newline);
-    // Excess whitespace is handled during lexing.
+        _query_bypass(token_list, Newline, newline_token);
 
-        if (token_list.empty()) {
+        if ((std::get<int>(newline_token[1]) < min_indent) || (token_list.empty())) {
             return single_operation;
         }
 
-        code_block = parse_code_block(token_list);
+        code_block = parse_code_block(token_list, min_indent);
 
         return std::make_shared<CodeBlock>(single_operation, code_block, 0);
     }
