@@ -9,7 +9,7 @@ The Regal playground (~/playground/playground.cpp) can be executed to generate a
 Note: C++20 or later is required for execution of any compiler code.
 
 V0.5 features:
- - Full boolean support, including arithmetic using '&'/'and', '|'/'or', '||'/'xor', '!'/'not', '>', '<', and '='.
+ - Full boolean support, including arithmetic using '&'/'and', '|'/'or', '||'/'xor', '!'/'not', '>', '<', and '=='.
  - Full static type-checking when assigning variables and evaluating arithmetic.
  - Impicit reassignment, 'let x = 7' initializes 'x', then 'x = 8' implicitly reassigns 'x' to a new value of the same type.
  - Tenary inline if-else statements, 'let x = 5 if y < 9 else y'.
