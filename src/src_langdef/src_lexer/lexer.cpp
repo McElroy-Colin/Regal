@@ -101,6 +101,7 @@ namespace {
 void lex_string(String& line, std::list<Token>& token_list) {
     int matched_index, whitespace_count;
 
+//  Match any whitespace preceding the first line of code.
     std::pair<int, int> position_count = _match_whitespace(line, 0);
     int string_index = position_count.first;
 
@@ -192,9 +193,10 @@ void lex_string(String& line, std::list<Token>& token_list) {
         } else {
 //          Switch statement for single character tokens.
             switch (line[string_index]) {
-                case '\n': 
+                case '\n': {
                     token_list.push_back({ Newline });
 
+//                  Match and count whitespace preceding a new line of code.
                     std::pair<int, int> position_count = _match_whitespace(line, string_index, true);
                     string_index = position_count.first;
 
@@ -203,7 +205,7 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     }
 
                     break;
-                
+                }              
                 case '=':
                     token_list.push_back({ Bind });
                     string_index++;

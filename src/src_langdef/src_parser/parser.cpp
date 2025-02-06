@@ -169,7 +169,7 @@ Action parse_code_block(std::list<Token>& token_list) {
 
         code_block = parse_code_block(token_list);
 
-        return std::make_shared<CodeBlock>(single_operation, code_block);
+        return std::make_shared<CodeBlock>(single_operation, code_block, 0);
     }
     
     return single_operation;
