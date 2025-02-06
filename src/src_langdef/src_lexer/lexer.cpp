@@ -159,6 +159,10 @@ void lex_string(String& line, std::list<Token>& token_list) {
             token_list.push_back(token);
             string_index = std::get<int>(position_label[0]);
         
+        } else if (_match_token(line, "==", string_index, false) > string_index) {
+            token_list.push_back({ Equals });
+            string_index += 2;
+
         } else if (_match_token(line, "**", string_index, false) > string_index) {
             token_list.push_back({ Exp });
             string_index += 2;
@@ -177,7 +181,7 @@ void lex_string(String& line, std::list<Token>& token_list) {
                     break;
                 
                 case '=':
-                    token_list.push_back({ Equals });
+                    token_list.push_back({ Bind });
                     string_index++;
                     break;
 

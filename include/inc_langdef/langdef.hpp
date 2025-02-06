@@ -27,14 +27,14 @@ enum TokenKey {
     Not, NotW,
 
 //  Binary Operators
-    Plus, Minus, Mult, Div, Exp, And, AndW, Or, OrW, Xor, XorW,  Greater, Less, Is, /*Equals,*/ 
+    Plus, Minus, Mult, Div, Exp, And, AndW, Or, OrW, Xor, XorW,  Greater, Less, Equals, Is,
 
 //  Ternary Operators
     If, Else,
 
 //  Variables
     Var,
-    Equals,
+    Bind,
 
 //  Miscellaneous
     LeftPar, RightPar, Newline,
@@ -89,7 +89,7 @@ enum DisplayOption {
 //      disp_option: controls the display string for the given token (input)
 //      display: display string of the token (output)
 //      assignment_operator: true if '=' is used to assign variables not compare values (input)
-void display_token(const Token& token, const DisplayOption disp_option, String& display, const bool assignment_operator = true) {
+void display_token(const Token& token, const DisplayOption disp_option, String& display) {
     const TokenKey token_key = std::get<TokenKey>(token[0]);
 
     switch (token_key) {
@@ -285,9 +285,13 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
             }
             break;
 
+        case TokenKey::Bind:
+            display = "=";
+            break;
+
         case TokenKey::Equals:
-            if (assignment_operator || (disp_option == Literal)) {
-                display = "=";
+            if (disp_option == Literal) {
+                display = "==";
             } else if (disp_option == Key) {
                 display = "<comparison operator>";
             } else {
@@ -329,10 +333,10 @@ void display_token(const Token& token, const DisplayOption disp_option, String& 
 }
 
 // Return value output overload of the above function.
-String display_token(const Token& token, const DisplayOption disp_option, const bool assignment_operator = true) {
+String display_token(const Token& token, const DisplayOption disp_option) {
     String result;
 
-    display_token(token, disp_option, result, assignment_operator);
+    display_token(token, disp_option, result);
 
     return result;
 }

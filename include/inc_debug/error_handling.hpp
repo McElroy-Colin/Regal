@@ -160,13 +160,13 @@ class InavlidOperatorError : public IncorrectInputError {
 //          op: operator token key being used incorrectly (input)
         InavlidOperatorError(const Action& data_type, const TokenKey op)
             : IncorrectInputError("InvalidOperatorError: " + std::visit([](const auto& d) { return d->disp(Literal); }, data_type) 
-            + " using \'" + display_token({op}, Literal, false) + "\' operator") {}
+            + " using \'" + display_token({op}, Literal) + "\' operator") {}
 
 //      Constructor to handle an operator taking invalid data. 
 //          op: operator token key being used incorrectly (input)
         InavlidOperatorError(const TokenKey op) 
             : IncorrectInputError("InvalidOperatorError: \'" 
-                + display_token({op}, Literal, false) + "\' operator used with invalid type") {}
+                + display_token({op}, Literal) + "\' operator used with invalid type") {}
 };
 
 // Error class representing division by 0.
@@ -199,7 +199,7 @@ class TypeMismatchError : public IncorrectInputError {
 //      Constructor handling mismatched types on a given operator.
 //          op: operator token key wwith mismatched types (input)
         TypeMismatchError(const TokenKey op) 
-            : IncorrectInputError("TypeMismatchError: \'" + display_token({op}, Literal, false) + "\' operator mismatched types") {}
+            : IncorrectInputError("TypeMismatchError: \'" + display_token({op}, Literal) + "\' operator mismatched types") {}
 
         TypeMismatchError(Action& data_type) 
             : IncorrectInputError("TypeMismatchError: if statement expected a boolean condition but received " 

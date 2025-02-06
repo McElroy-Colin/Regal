@@ -10,10 +10,9 @@ Context-Free Grammar that dictates order of syntax in Regal
     - The '|' symbol represents an OR branch.
 
 
-File -> '\n' '<whitespace>' CodeBlock | '<whitespace>' CodeBlock
-    <whitespace> is any number of whitespace characters
+File -> '\n' CodeBlock | CodeBlock
 
-CodeBlock -> SingleOperation '\n' '<whitespace>' CodeBlock | SingleOperation '\n' '<whitespace>'
+CodeBlock -> SingleOperation '\n' CodeBlock | SingleOperation '\n'
     <whitespace> is any number of whitespace characters
 
 SingleOperation -> Assignment
@@ -50,7 +49,7 @@ BOOLEAN ARITHMETIC:
         <not_op> is '!' or 'not'
     
     ComparisonExpr -> AdditiveExpr '<comp_op>' ComparisonExpr | AdditiveExpr
-        <comp_op> is '>', '<', '=', or 'is'
+        <comp_op> is '>', '<', '==', or 'is'
 
 
 NUMERICAL ARITHMETIC:

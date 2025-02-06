@@ -220,7 +220,7 @@ Action parse_let_statement(std::list<Token>& token_list) {
     _query_bypass(token_list, Var, variable_token);
     variable = std::get<String>(variable_token[1]);
 
-    _match_bypass(token_list, Equals);
+    _match_bypass(token_list, Bind);
 
 //  Parse the expression after '='.
     inline_if_statement = parse_inline_if_statement(token_list);
@@ -241,7 +241,7 @@ Action parse_now_statement(std::list<Token>& token_list) {
     _query_bypass(token_list, Var, variable_token);
     variable = std::get<String>(variable_token[1]);
 
-    _match_bypass(token_list, Equals);
+    _match_bypass(token_list, Bind);
 
 //  Parse the expression following '='.
     inline_if_statement = parse_inline_if_statement(token_list);
@@ -261,7 +261,7 @@ Action parse_implicit_assignment(std::list<Token>& token_list) {
     _query_bypass(token_list, Var, variable_token);
     variable = std::get<String>(variable_token[1]);
 
-    _match_bypass(token_list, Equals);
+    _match_bypass(token_list, Bind);
 
 //  Parse the expression after '='.
     inline_if_statement = parse_inline_if_statement(token_list);

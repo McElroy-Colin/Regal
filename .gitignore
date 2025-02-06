@@ -6,6 +6,7 @@ new_pground/
 personal_folder/
 boned_copy/
 Makefile
+build/
 
 # System files
 *.vscode
