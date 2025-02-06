@@ -40,7 +40,6 @@ Action parse_primitive_expression(std::list<Token>& token_list);
 Action parse_number_expression(std::list<Token>& token_list);
 Action parse_boolean_expression(std::list<Token>& token_list);
 
-
 // Anonymous namespace containing parsing helper functions.
 namespace {
 

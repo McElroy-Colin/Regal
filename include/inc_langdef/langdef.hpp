@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <utility>
 
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP
@@ -37,7 +38,7 @@ enum TokenKey {
     Bind,
 
 //  Miscellaneous
-    LeftPar, RightPar, Newline,
+    LeftPar, RightPar, Whitespace, Newline, 
 
 //  Nothing token for debug purposes.
     Nothing
@@ -353,14 +354,15 @@ struct Data {
 struct CodeBlock : Data {
     private:
         Action curr_operation, remainder;
+        int depth;
 
     public:
-        CodeBlock() : curr_operation(), remainder() {}
-        CodeBlock(Action& curr_op, Action& rem) 
-            : curr_operation(curr_op), remainder(rem) {}
+        CodeBlock() : curr_operation(), remainder(), depth(0) {}
+        CodeBlock(Action& curr_op, Action& rem, int d) 
+            : curr_operation(curr_op), remainder(rem), depth(d) {}
         CodeBlock(const CodeBlock&& other)
             : curr_operation(std::move(other.curr_operation)),
-            remainder(std::move(other.remainder)) {}
+            remainder(std::move(other.remainder)), depth(other.depth) {}
 
         Action& get_operation() {
             return curr_operation;
@@ -368,6 +370,10 @@ struct CodeBlock : Data {
 
         Action& get_remainder() {
             return remainder;
+        }
+
+        int get_depth() {
+            return depth;
         }
 
         String disp(const DisplayOption option) const override {
@@ -449,6 +455,27 @@ struct Variable : Data {
             }
         }
 };
+
+/*
+// Struct for whitespace data.
+struct Whitespace : Data {
+    private:
+        String whitespace;
+    
+    public:
+        Whitespace() : whitespace(""){}
+        Whitespace(String w) : whitespace(w) {}
+        Whitespace(Whitespace&& other) noexcept : whitespace(std::move(other.whitespace)) {}
+
+        String& get_whitespace() {
+            return whitespace;
+        }
+
+        String disp(const DisplayOption option) const override {
+            return "";
+        }
+};
+*/
 
 // Struct for a unary operator node.
 struct UnaryOperator : Data {

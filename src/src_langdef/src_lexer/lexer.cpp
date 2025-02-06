@@ -4,6 +4,8 @@
 #include "../../../include/inc_debug/error_handling.hpp"
 
 
+constexpr int TAB_WIDTH = 4;
+
 // Anonymous namespace containing helper functions/macros for the Regal lexer function.
 namespace {
 
@@ -12,15 +14,25 @@ namespace {
     #define is_label(c) ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || is_integer(c)
 
 //  Match sequential whitespace characters in the given string starting at the given index. 
-//  Return the index succeeding the final whitespace character.
+//  Return a pair with the index succeeding the final whitespace character and the total level of indentation.
 //      line: the line of code (input)
 //      string_index: the first index to match with whitespace (input)
-    int _match_whitespace(const String& line, const int string_index, const bool match_newlines = false) {
+//      match_newlines: true if the newline character '\n' should also be matched (input)
+    std::pair<int, int> _match_whitespace(const String& line, const int string_index, const bool match_newlines = false) {
         int whitespace_index;
+        int whitespace_count = 0;
 
         for (whitespace_index = string_index; is_whitespace(line[whitespace_index]) 
-                || (match_newlines && (line[whitespace_index] == '\n')); whitespace_index++);
-        return whitespace_index;
+        || (match_newlines && (line[whitespace_index] == '\n')); whitespace_index++) {
+            if (line[whitespace_index] == '\t') {
+                whitespace_count += TAB_WIDTH;
+            } else if (line[whitespace_index] == ' ') {
+                whitespace_count += 1;
+            } else if (match_newlines && (line[whitespace_index] == '\n')) {
+                whitespace_count = 0;
+            }
+        }
+        return std::make_pair(whitespace_index, whitespace_count);
     }
 
 //  Match sequential integer characters in the given string starting at the given index.
@@ -75,7 +87,7 @@ namespace {
                 return string_index;
             }
 
-            return _match_whitespace(line, word_index);
+            return _match_whitespace(line, word_index).first;
         }
         return word_index;
     }
@@ -87,13 +99,19 @@ namespace {
 //      line: the line of code to lex (input)
 //      token_list: list of tokens from the given line (output)
 void lex_string(String& line, std::list<Token>& token_list) {
-    int matched_index;
-    int string_index = 0;
+    int matched_index, whitespace_count;
+
+    std::pair<int, int> position_count = _match_whitespace(line, 0);
+    int string_index = position_count.first;
+
+    if (string_index > 0) {
+        token_list.push_back({Whitespace, position_count.second});
+    }
 
     while (string_index < line.size()) {
 //      Bypass whitespace characters between tokens.
         if (is_whitespace(line[string_index])) {
-            string_index = _match_whitespace(line, string_index);
+            string_index = _match_whitespace(line, string_index).first;
 
         } else if (is_integer(line[string_index])) {
             std::vector<int> position_integer; 
@@ -177,7 +195,13 @@ void lex_string(String& line, std::list<Token>& token_list) {
                 case '\n': 
                     token_list.push_back({ Newline });
 
-                    string_index = _match_whitespace(line, string_index, true);
+                    std::pair<int, int> position_count = _match_whitespace(line, string_index, true);
+                    string_index = position_count.first;
+
+                    if (position_count.second > 0) {
+                        token_list.push_back({Whitespace, position_count.second});
+                    }
+
                     break;
                 
                 case '=':
