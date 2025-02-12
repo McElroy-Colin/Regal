@@ -11,25 +11,27 @@ std::vector<size_t> number_types = {
     0 /* intContainer */
 };
 
-
-//  Return true if the given actions are of different types.
-//      action1: first code_tree to compare (input)
-//      action2: second code_tree to compare (input)
-bool type_mismatch(const syntaxNode& action1, const syntaxNode& action2) {
-    return action1.index() != action2.index();
-}
-
-
-//  Return true if the given code_tree is non of the given types.
-//      code_tree: code_tree to compare (input)
-//      types: types to check the code_tree for (input)
-bool incompatible_type(const syntaxNode& code_tree, const std::vector<size_t>& types) {
-    for (int i = 0; i < types.size(); i++) {
-        if (types[i] == code_tree.index()) {
-            return false;
-        }
+// Namespace for type checking data and utilities.
+namespace TypingUtils {
+//  Return true if the given nodes are of different types.
+//      node1: first code tree to compare (input)
+//      node2: second code tree to compare (input)
+    bool type_mismatch(const syntaxNode& node1, const syntaxNode& node2) {
+        return node1.index() != node2.index();
     }
-    return true;
+
+
+//  Return true if the given code tree is non of the given types.
+//      code_tree: code tree to compare (input)
+//      types: types to check the code tree for (input)
+    bool incompatible_type(const syntaxNode& code_tree, const std::vector<size_t>& types) {
+        for (int i = 0; i < types.size(); i++) {
+            if (types[i] == code_tree.index()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 

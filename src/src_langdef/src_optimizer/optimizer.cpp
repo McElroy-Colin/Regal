@@ -4,6 +4,9 @@
 #include "../../../include/inc_debug/error_handling.hpp"
 
 using std::map, std::shared_ptr, std::string, std::to_string, std::move, std::get, std::make_shared, std::holds_alternative;
+
+using namespace TypingUtils;
+
 using namespace DebugUtils;
 using namespace TokenDef;
 using namespace CodeTree;

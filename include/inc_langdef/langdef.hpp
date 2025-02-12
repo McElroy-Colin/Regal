@@ -14,7 +14,6 @@
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP
 
-
 // Namespace for utilities in debugging and displaying Regal code.
 namespace DebugUtils {
     
@@ -282,7 +281,6 @@ namespace DebugUtils {
             return result;
         }
     }
-
 
 // Namespace for definition of individual token data for lexing and parsing Regal code.
 namespace TokenDef {
