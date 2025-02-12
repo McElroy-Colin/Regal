@@ -4,6 +4,8 @@
 #include "../../../include/inc_langdef/optimizer.hpp"
 #include "../../../include/inc_debug/error_handling.hpp"
 
+using std::string;
+using namespace CodeTree;
 
 // Execute the given code_tree on the given stack.
 //      code_tree: code_tree to execute (input)
