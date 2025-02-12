@@ -6,26 +6,26 @@
 #ifndef OPTIMIZER_HPP
 #define OPTIMIZER_HPP
 
-// TODO: this is bad, dont want to manually update this when i add more actions
+// TODO: this is bad, dont want to manually update this when I add more actions
 std::vector<size_t> number_types = {
-    0 /* Integer */
+    0 /* intContainer */
 };
 
 
 //  Return true if the given actions are of different types.
-//      action1: first action to compare (input)
-//      action2: second action to compare (input)
-bool type_mismatch(const Action& action1, const Action& action2) {
+//      action1: first code_tree to compare (input)
+//      action2: second code_tree to compare (input)
+bool type_mismatch(const syntaxNode& action1, const syntaxNode& action2) {
     return action1.index() != action2.index();
 }
 
 
-//  Return true if the given action is non of the given types.
-//      action: action to compare (input)
-//      types: types to check the action for (input)
-bool incompatible_type(const Action& action, const std::vector<size_t>& types) {
+//  Return true if the given code_tree is non of the given types.
+//      code_tree: code_tree to compare (input)
+//      types: types to check the code_tree for (input)
+bool incompatible_type(const syntaxNode& code_tree, const std::vector<size_t>& types) {
     for (int i = 0; i < types.size(); i++) {
-        if (types[i] == action.index()) {
+        if (types[i] == code_tree.index()) {
             return false;
         }
     }

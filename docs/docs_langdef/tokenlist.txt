@@ -14,9 +14,9 @@ Declarative tokens:
     Variable/function labels: Variable/function labels must start with a letter or '_' followed by 
     any number of alphanumeric characters or '_'.
 
-    'let': Denotes the assignment of a new variable or function. (e.g. 'let x = 3')
+    'let': Denotes the assignment of a new variable. (e.g. 'let x = 3')
 
-    'now': Denotes the reassigment/retyping of an existing variable or function. (e.g. 'now x = true')
+    'now': Denotes the reassigment/retyping of an existing variable. (e.g. 'now x = true')
 
     '=': Assigns the given variable/function label to the given expression.
 

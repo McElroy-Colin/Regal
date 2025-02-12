@@ -14,607 +14,655 @@
 #ifndef LANGDEF_HPP
 #define LANGDEF_HPP
 
-using String = std::string;
 
-// Enum for all tokens in Regal.
-enum TokenKey {
-//  Keywords
-    Let, Now, 
-
-//  Primitive data types
-    Int, Bool,
-
-//  Unary Operators
-    Not, NotW,
-
-//  Binary Operators
-    Plus, Minus, Mult, Div, Exp, And, AndW, Or, OrW, Xor, XorW,  Greater, Less, Equals, Is,
-
-//  Ternary Operators
-    If, Else,
-
-//  Variables
-    Var,
-    Bind,
-
-//  Miscellaneous
-    LeftPar, RightPar, Newline, 
-
-//  Nothing token for debug purposes.
-    Nothing
-};
-
-// Useful subsets of tokens.
-std::vector<TokenKey> keyword_tokens = {Let, Now};
-std::vector<TokenKey> number_tokens = {Int};
-
-
-// Token aliases.
-using Token = std::vector<std::variant<TokenKey, int, String>>;
-
-// AST node definitions.
-struct CodeBlock;
-
-struct Integer;
-struct Boolean;
-struct Variable;
-struct UnaryOperator;
-struct BinaryOperator;
-struct TernaryOperator;
-struct Assign;
-struct Reassign;
-
-// Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
-using Action = std::variant<
-    std::shared_ptr<CodeBlock>,
-
-    std::shared_ptr<Integer>, 
-    std::shared_ptr<Boolean>, 
-    std::shared_ptr<Variable>, 
-    std::shared_ptr<UnaryOperator>, 
-    std::shared_ptr<BinaryOperator>, 
-    std::shared_ptr<TernaryOperator>, 
-    std::shared_ptr<Assign>, 
-    std::shared_ptr<Reassign>
->;
-
-// Display options for pieces of data.
-enum DisplayOption {
-    Literal,     // display as input by the user (e.g. 'let' is 'let', '4' is '4')
-    Key,         // display key name (e.g. 'let' is 'let', '4' is '<integer>')
-    Subset       // display the set of tokens the data belongs to (e.g. 'let' is '<keyword>', '4' is '<number>')
-};
-
-// Store the display string of the given token.
-//      token: token to display (input)
-//      disp_option: controls the display string for the given token (input)
-//      display: display string of the token (output)
-//      assignment_operator: true if '=' is used to assign variables not compare values (input)
-void display_token(const Token& token, const DisplayOption disp_option, String& display) {
-    const TokenKey token_key = std::get<TokenKey>(token[0]);
-
-    switch (token_key) {
-        case TokenKey::Let:
-            if (disp_option == Subset) {
-                display = "<keyword>";
-            } else {
-                display = "let";
+// Namespace for utilities in debugging and displaying Regal code.
+namespace DebugUtils {
+    
+    //  Display options for pieces of data.
+        enum tokenDispOption {
+            Literal,     // display as input by the user (e.g. 'let' is 'let', '4' is '4')
+            Key,         // display key name (e.g. 'let' is 'let', '4' is '<integer>')
+            Subset       // display the set of tokens the data belongs to (e.g. 'let' is '<keyword>', '4' is '<number>')
+        };
+    
+    //  Store the display std::string of the given token.
+    //       disp_token: disp_token to display (input)
+    //       disp_option: controls the display std::string for the given token (input)
+    //       display: display std::string of the token (output)
+    //       assignment_operator: true if '=' is used to assign variables not compare values (input)
+        void display_token(const TokenDef::token& disp_token, const tokenDispOption disp_option, std::string& display) {
+            const TokenDef::tokenKey token_key = std::get<TokenDef::tokenKey>(disp_token[0]);
+    
+            switch (token_key) {
+                case TokenDef::tokenKey::Let:
+                    if (disp_option == Subset) {
+                        display = "<keyword>";
+                    } else {
+                        display = "let";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Now:
+                    if (disp_option == Subset) {
+                        display = "<keyword>";
+                    } else {
+                        display = "now";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Int:
+                    if (disp_option == Literal) {
+                        int n = std::get<int>(disp_token[1]);
+                        display = std::to_string(n);
+                    } else if (disp_option == Key) {
+                        display = "<integer>";
+                    } else {
+                        display = "<number>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Bool:
+                    if (disp_option == Literal) {
+                        bool b = std::get<int>(disp_token[1]);
+                        display = b ? "true" : "false";
+                    } else {
+                        display = "<boolean>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Plus:
+                    if (disp_option == Literal) {
+                        display = "+";
+                    } else if (disp_option == Key) {
+                        display = "<additive operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Minus:
+                    if (disp_option == Literal) {
+                        display = "-";
+                    } else if (disp_option == Key) {
+                        display = "<additive operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Mult:
+                    if (disp_option == Literal) {
+                        display = "*";
+                    } else if (disp_option == Key) {
+                        display = "<multiplicative operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Div:
+                    if (disp_option == Literal) {
+                        display = "/";
+                    } else if (disp_option == Key) {
+                        display = "<multiplicative operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Exp:
+                    if (disp_option == Subset) {
+                        display = "<binary operator>";
+                    } else {
+                        display = "**";
+                    }
+                    break;
+                
+                case TokenDef::tokenKey::And:
+                    if (disp_option == Literal) {
+                        display = "&";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::AndW:
+                    if (disp_option == Literal) {
+                        display = "and";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Or:
+                    if (disp_option == Literal) {
+                        display = "|";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::OrW:
+                    if (disp_option == Literal) {
+                        display = "or";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Xor:
+                    if (disp_option == Literal) {
+                        display = "||";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::XorW:
+                    if (disp_option == Literal) {
+                        display = "xor";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Not:
+                    if (disp_option == Literal) {
+                        display = "!";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<unary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::NotW:
+                    if (disp_option == Literal) {
+                        display = "not";
+                    } else if (disp_option == Key) {
+                        display = "<boolean operator>";
+                    } else {
+                        display = "<unary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Greater:
+                    if (disp_option == Literal) {
+                        display = ">";
+                    } else if (disp_option == Key) {
+                        display = "<comparison operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Less:
+                    if (disp_option == Literal) {
+                        display = "<";
+                    } else if (disp_option == Key) {
+                        display = "<comparison operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Var:
+                    if (disp_option == Literal) {
+                        display = std::get<std::string>(disp_token[1]);
+                    } else {
+                        display = "<variable>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Bind:
+                    display = "=";
+                    break;
+    
+                case TokenDef::tokenKey::Equals:
+                    if (disp_option == Literal) {
+                        display = "==";
+                    } else if (disp_option == Key) {
+                        display = "<comparison operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::Is:
+                    if (disp_option == Literal) {
+                        display = "is";
+                    } else if (disp_option == Key) {
+                        display = "<comparison operator>";
+                    } else {
+                        display = "<binary operator>";
+                    }
+                    break;
+    
+                case TokenDef::tokenKey::LeftPar:
+                    display = "(";
+                    break;
+    
+                case TokenDef::tokenKey::RightPar:
+                    display = ")";
+                    break;
+    
+                case TokenDef::tokenKey::Nothing:
+                    display = "nothing";
+                    break;
+                
+                case TokenDef::tokenKey::Newline:
+                    display = "<newline>";
+                    break;
+    
+                default:
+                    display = "<UNKNWON TOKEN>";
             }
-            break;
-
-        case TokenKey::Now:
-            if (disp_option == Subset) {
-                display = "<keyword>";
-            } else {
-                display = "now";
-            }
-            break;
-
-        case TokenKey::Int:
-            if (disp_option == Literal) {
-                int n = std::get<int>(token[1]);
-                display = std::to_string(n);
-            } else if (disp_option == Key) {
-                display = "<integer>";
-            } else {
-                display = "<number>";
-            }
-            break;
-
-        case TokenKey::Bool:
-            if (disp_option == Literal) {
-                bool b = std::get<int>(token[1]);
-                display = b ? "true" : "false";
-            } else {
-                display = "<boolean>";
-            }
-            break;
-
-        case TokenKey::Plus:
-            if (disp_option == Literal) {
-                display = "+";
-            } else if (disp_option == Key) {
-                display = "<additive operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Minus:
-            if (disp_option == Literal) {
-                display = "-";
-            } else if (disp_option == Key) {
-                display = "<additive operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Mult:
-            if (disp_option == Literal) {
-                display = "*";
-            } else if (disp_option == Key) {
-                display = "<multiplicative operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Div:
-            if (disp_option == Literal) {
-                display = "/";
-            } else if (disp_option == Key) {
-                display = "<multiplicative operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Exp:
-            if (disp_option == Subset) {
-                display = "<binary operator>";
-            } else {
-                display = "**";
-            }
-            break;
-        
-        case TokenKey::And:
-            if (disp_option == Literal) {
-                display = "&";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::AndW:
-            if (disp_option == Literal) {
-                display = "and";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Or:
-            if (disp_option == Literal) {
-                display = "|";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::OrW:
-            if (disp_option == Literal) {
-                display = "or";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Xor:
-            if (disp_option == Literal) {
-                display = "||";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::XorW:
-            if (disp_option == Literal) {
-                display = "xor";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Not:
-            if (disp_option == Literal) {
-                display = "!";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<unary operator>";
-            }
-            break;
-
-        case TokenKey::NotW:
-            if (disp_option == Literal) {
-                display = "not";
-            } else if (disp_option == Key) {
-                display = "<boolean operator>";
-            } else {
-                display = "<unary operator>";
-            }
-            break;
-
-        case TokenKey::Greater:
-            if (disp_option == Literal) {
-                display = ">";
-            } else if (disp_option == Key) {
-                display = "<comparison operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Less:
-            if (disp_option == Literal) {
-                display = "<";
-            } else if (disp_option == Key) {
-                display = "<comparison operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Var:
-            if (disp_option == Literal) {
-                display = std::get<String>(token[1]);
-            } else {
-                display = "<variable>";
-            }
-            break;
-
-        case TokenKey::Bind:
-            display = "=";
-            break;
-
-        case TokenKey::Equals:
-            if (disp_option == Literal) {
-                display = "==";
-            } else if (disp_option == Key) {
-                display = "<comparison operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::Is:
-            if (disp_option == Literal) {
-                display = "is";
-            } else if (disp_option == Key) {
-                display = "<comparison operator>";
-            } else {
-                display = "<binary operator>";
-            }
-            break;
-
-        case TokenKey::LeftPar:
-            display = "(";
-            break;
-
-        case TokenKey::RightPar:
-            display = ")";
-            break;
-
-        case TokenKey::Nothing:
-            display = "nothing";
-            break;
-        
-        case TokenKey::Newline:
-            display = "<newline>";
-            break;
-
-        default:
-            display = "<UNKNWON TOKEN>";
+    
+            return;
+        }
+    
+        // Return value output overload of the above function.
+        std::string display_token(const TokenDef::token& disp_token, const tokenDispOption disp_option) {
+            std::string result;
+    
+            display_token(disp_token, disp_option, result);
+    
+            return result;
+        }
     }
 
-    return;
-}
 
-// Return value output overload of the above function.
-String display_token(const Token& token, const DisplayOption disp_option) {
-    String result;
-
-    display_token(token, disp_option, result);
-
-    return result;
-}
-
-
-// Parent struct for all data.
-struct Data {
-    protected:
-        virtual String disp(const DisplayOption option) const = 0;
-        virtual ~Data() = default;
-};
-
-// Struct for a block of code
-struct CodeBlock : Data {
-    private:
-        Action curr_operation, remainder;
-        int depth;
-
-    public:
-        CodeBlock() : curr_operation(), remainder(), depth(0) {}
-        CodeBlock(Action& curr_op, Action& rem, int d) 
-            : curr_operation(curr_op), remainder(rem), depth(d) {}
-        CodeBlock(const CodeBlock&& other)
-            : curr_operation(std::move(other.curr_operation)),
-            remainder(std::move(other.remainder)), depth(other.depth) {}
-
-        Action& get_operation() {
-            return curr_operation;
-        }
-
-        Action& get_remainder() {
-            return remainder;
-        }
-
-        int get_depth() {
-            return depth;
-        }
-
-        String disp(const DisplayOption option) const override {
-            return std::visit([](const auto& d) { return d->disp(Literal); }, curr_operation);
-        }
-
-};
-
-// Struct for an Integer node.
-struct Integer : Data {
-    private:
-        int number;
-
-    public:
-        Integer() : number(0) {}
-        Integer(int n) : number(n) {}
-        Integer(const Integer& other) : number(other.number) {}
+// Namespace for definition of individual token data for lexing and parsing Regal code.
+namespace TokenDef {
+//  Enum for all tokens in Regal.
+    enum tokenKey {
+//          Keywords
+            Let, Now, 
         
-        int get_number() {
-            return number;
-        }
+//          Irreducible data types
+            Int, Bool,
+        
+//          Unary Operators
+            Not, NotW,
+        
+//          Binary Operators
+            Plus, Minus, Mult, Div, Exp, And, AndW, Or, OrW, Xor, XorW,  Greater, Less, Equals, Is,
+        
+//          Ternary Operators
+            If, Else,
+        
+//          Variables
+            Var,
+            Bind,
+        
+//          Miscellaneous
+            LeftPar, RightPar, Newline, 
+        
+//          Nothing token for debug purposes.
+            Nothing
+        };
 
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return std::to_string(number);
-                case Key:
-                    return "<integer>";
-                default:
-                    return "<number>";
+//  Token aliases.
+    using token = std::vector<std::variant<tokenKey, int, std::string>>;
+
+//  Useful subsets of tokens.
+    std::vector<tokenKey> number_tokens = {Int};
+}
+
+// Namespace for syntax tree data and definitoions for parsing and executing Regal code.
+namespace CodeTree {
+//  AST syntaxNode definitions.
+    struct codeBlock;
+    struct ifBlock;
+
+    struct intContainer;
+    struct boolContainer;
+    struct varContainer;
+    struct unaryOp;
+    struct binaryOp;
+    struct ternaryOp;
+    struct assignOp;
+    struct reassignOp;
+
+//  Variant using shared pointers to allow the AST to have recursive, type-safe nodes.
+    using syntaxNode = std::variant<
+        std::shared_ptr<codeBlock>,
+        std::shared_ptr<ifBlock>,
+
+        std::shared_ptr<intContainer>, 
+        std::shared_ptr<boolContainer>, 
+        std::shared_ptr<varContainer>, 
+        std::shared_ptr<unaryOp>, 
+        std::shared_ptr<binaryOp>, 
+        std::shared_ptr<ternaryOp>, 
+        std::shared_ptr<assignOp>, 
+        std::shared_ptr<reassignOp>
+    >;
+
+//  Parent struct for all data.
+    struct Data {
+        protected:
+            virtual std::string disp(const DebugUtils::tokenDispOption option) const = 0;
+            virtual ~Data() = default;
+    };
+
+
+//  Parent struct for irreducible data values.
+    struct IrreducibleData : Data {
+        protected:
+            virtual ~IrreducibleData() = default;
+    };
+
+//  Struct for a block of code
+    struct codeBlock : Data {
+        private:
+            syntaxNode curr_operation, remainder;
+
+        public:
+            codeBlock() : curr_operation(), remainder() {}
+            codeBlock(syntaxNode& curr_op, syntaxNode& rem) 
+                : curr_operation(curr_op), remainder(rem) {}
+            codeBlock(const codeBlock&& other)
+                : curr_operation(std::move(other.curr_operation)),
+                remainder(std::move(other.remainder)) {}
+
+            syntaxNode& get_operation() {
+                return curr_operation;
             }
-        }
-};
 
-// Struct for a Boolean node.
-struct Boolean : Data {
-    private:
-        bool boolean;
-
-    public:
-        Boolean() : boolean(false) {}
-        Boolean(bool b) : boolean(b) {}
-        Boolean(const Boolean& other) : boolean(other.boolean) {}
-
-        bool get_boolean() {
-            return boolean;
-        }
-
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return boolean ? "true" : "false";
-                default:
-                    return "<boolean>";
-            } 
-        }
-};
-
-// Struct for a Variable node.
-struct Variable : Data {
-    private:
-        String variable;
-
-    public:
-        Variable() : variable("") {}
-        Variable(String var) : variable(var) {}
-        Variable(Variable&& other) noexcept : variable(std::move(other.variable)) {}
-
-        String& get_variable() {
-            return variable;
-        }
-
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return variable;
-                default:
-                    return "<variable>";
+            syntaxNode& get_remainder() {
+                return remainder;
             }
-        }
-};
 
-// Struct for a unary operator node.
-struct UnaryOperator : Data {
-    private:
-        TokenKey op;
-        Action expression;
-
-    public:
-        UnaryOperator() : op(Nothing), expression() {}
-        UnaryOperator(TokenKey op, Action e) : op(op), expression(e) {}
-        UnaryOperator(UnaryOperator&& other) noexcept : op(other.op),
-            expression(std::move(other.expression)) {}
-    
-        Action& get_expression() {
-            return expression;
-        }
-
-        TokenKey get_op() {
-            return op;
-        }
-
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return display_token({op}, Literal);
-                default:
-                    return "<unary operator>";
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                return std::visit([](const auto& d) { return d->disp(DebugUtils::Literal); }, curr_operation);
             }
-        }
-};
 
-// Struct for a binary operator node.
-struct BinaryOperator : Data {
-    private:
-        TokenKey op;
-        Action expression1, expression2;
+    };
 
-    public:
-        BinaryOperator() : op(Nothing), expression1(), expression2() {}
-        BinaryOperator(TokenKey op, Action e1, Action e2) : op(op), expression1(e1), expression2(e2) {}
-        BinaryOperator(BinaryOperator&& other) noexcept : op(other.op),
-            expression1(std::move(other.expression1)),
-            expression2(std::move(other.expression2)) {}
+//  Struct for an if-else block of code.
+    struct ifBlock : Data {
+        private:
+            syntaxNode bool_condition, if_block, else_block;
+            bool contains_else;
 
-        Action& get_expression1() {
-            return expression1;
-        }
+        public:
+            ifBlock() : bool_condition(), if_block(), else_block(), contains_else(false) {}
+            ifBlock(syntaxNode& b, syntaxNode& cb) : bool_condition(b), if_block(cb), else_block(), contains_else(false) {}
+            ifBlock(syntaxNode& b, syntaxNode& cb, syntaxNode& eb) : bool_condition(b), if_block(cb), else_block(eb), contains_else(true) {}
+            ifBlock(const ifBlock&& other) 
+                : bool_condition(std::move(other.bool_condition)), 
+                if_block(std::move(other.if_block)), 
+                else_block(std::move(other.else_block)), contains_else(other.contains_else) {}
 
-        Action& get_expression2() {
-            return expression2;
-        }
-
-        TokenKey get_op() {
-            return op;
-        }
-
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return display_token({op}, Literal);
-                default:
-                    return "<binary operator>";
+            syntaxNode& get_condition() {
+                return bool_condition;
             }
-        }
-};
 
-// Struct for a ternary operator node.
-struct TernaryOperator : Data {
-    private:
-        TokenKey op;
-        Action expression1, expression2, expression3;
-
-    public:
-        TernaryOperator() : op(Nothing), expression1(), expression2(), expression3() {}
-        TernaryOperator(TokenKey op, Action e1, Action e2, Action e3) 
-            : op(op), expression1(e1), expression2(e2), expression3(e3) {}
-        TernaryOperator(TernaryOperator&& other) noexcept : op(other.op),
-            expression1(std::move(other.expression1)),
-            expression2(std::move(other.expression2)),
-            expression3(std::move(other.expression3)) {}
-
-        Action& get_expression1() {
-            return expression1;
-        }
-
-        Action& get_expression2() {
-            return expression2;
-        }
-
-        Action& get_expression3() {
-            return expression3;
-        }
-
-        TokenKey get_op() {
-            return op;
-        }
-
-        String disp(const DisplayOption option) const override {
-            switch (option) {
-                case Literal:
-                    return display_token({op}, Literal);
-                default:
-                    return "<ternary operator>";
+            syntaxNode& get_if_block() {
+                return if_block;
             }
-        }
-};
 
-// Struct for an assignment node.
-struct Assign : Data {
-    private:
-        String variable;
-        Action expression;
+            syntaxNode& get_else_block() {
+                return else_block;
+            }
 
-    public:
-        Assign() : variable(""), expression() {}
-        Assign(const String& v, const Action& e) : variable(v), expression(e) {}
-        Assign(Assign&& other) : variable(std::move(other.variable)), 
-            expression(std::move(other.expression)) {}
-    
-        String& get_variable() {
-            return variable;
-        }
+            bool has_else() {
+                return contains_else;
+            }
+            
+            // TODO: Fix this function or redo displays.
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                //return std::visit([](const auto& d) { return d->disp(Literal); }, bool_condition);
+            }
+    };
 
-        Action& get_expression() {
-            return expression;
-        }
+//  Struct for an intContainer syntaxNode.
+    struct intContainer : IrreducibleData {
+        private:
+            int number;
 
-        String disp(const DisplayOption option = Literal) const override {
-            return "<assignment>";
-        }
-};
+        public:
+            intContainer() : number(0) {}
+            intContainer(int n) : number(n) {}
+            intContainer(const intContainer& other) : number(other.number) {}
+            
+            int get_number() {
+                return number;
+            }
 
-// Struct for a reassignment node.
-struct Reassign : Data {
-    private:
-        String variable;
-        Action expression;
-        bool implicit;
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return std::to_string(number);
+                    case DebugUtils::Key:
+                        return "<integer>";
+                    default:
+                        return "<number>";
+                }
+            }
+    };
 
-    public:
-        Reassign() : variable(""), expression(), implicit(false) {}
-        Reassign(String v, Action e, bool i) : variable(v), expression(e), implicit(i) {}
-        Reassign(Reassign&& other) : variable(std::move(other.variable)), 
-            expression(std::move(other.expression)), implicit(other.implicit) {}
+//  Struct for a boolContainer syntaxNode.
+    struct boolContainer : IrreducibleData {
+        private:
+            bool boolean;
 
-        String& get_variable() {
-            return variable;
-        }
+        public:
+            boolContainer() : boolean(false) {}
+            boolContainer(bool b) : boolean(b) {}
+            boolContainer(const boolContainer& other) : boolean(other.boolean) {}
 
-        Action& get_expression() {
-            return expression;
-        }
+            bool get_boolean() {
+                return boolean;
+            }
 
-        bool get_implicit() {
-            return implicit;
-        }
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return boolean ? "true" : "false";
+                    default:
+                        return "<boolean>";
+                } 
+            }
+    };
 
-        String disp(const DisplayOption option = Literal) const override {
-            return implicit ? "<implicit reassignment>" : "<reassignment>";
-        }
-};
+//  Struct for a varContainer syntaxNode.
+    struct varContainer : Data {
+        private:
+            std::string variable;
+
+        public:
+            varContainer() : variable("") {}
+            varContainer(std::string var) : variable(var) {}
+            varContainer(varContainer&& other) noexcept : variable(std::move(other.variable)) {}
+
+            std::string& get_variable() {
+                return variable;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return variable;
+                    default:
+                        return "<variable>";
+                }
+            }
+    };
+
+//  Struct for a unary operator syntaxNode.
+    struct unaryOp : Data {
+        private:
+            TokenDef::tokenKey op;
+            syntaxNode expression;
+
+        public:
+            unaryOp() : op(TokenDef::Nothing), expression() {}
+            unaryOp(TokenDef::tokenKey op, syntaxNode e) : op(op), expression(e) {}
+            unaryOp(unaryOp&& other) noexcept : op(other.op),
+                expression(std::move(other.expression)) {}
+        
+            syntaxNode& get_expression() {
+                return expression;
+            }
+
+            TokenDef::tokenKey get_op() {
+                return op;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return display_token({op}, DebugUtils::Literal);
+                    default:
+                        return "<unary operator>";
+                }
+            }
+    };
+
+//  Struct for a binary operator syntaxNode.
+    struct binaryOp : Data {
+        private:
+            TokenDef::tokenKey op;
+            syntaxNode expression1, expression2;
+
+        public:
+            binaryOp() : op(TokenDef::Nothing), expression1(), expression2() {}
+            binaryOp(TokenDef::tokenKey op, syntaxNode e1, syntaxNode e2) : op(op), expression1(e1), expression2(e2) {}
+            binaryOp(binaryOp&& other) noexcept : op(other.op),
+                expression1(std::move(other.expression1)),
+                expression2(std::move(other.expression2)) {}
+
+            syntaxNode& get_expression1() {
+                return expression1;
+            }
+
+            syntaxNode& get_expression2() {
+                return expression2;
+            }
+
+            TokenDef::tokenKey get_op() {
+                return op;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return display_token({op}, DebugUtils::Literal);
+                    default:
+                        return "<binary operator>";
+                }
+            }
+    };
+
+//  Struct for a ternary operator syntaxNode.
+    struct ternaryOp : Data {
+        private:
+        TokenDef::tokenKey op;
+            syntaxNode expression1, expression2, expression3;
+
+        public:
+            ternaryOp() : op(TokenDef::Nothing), expression1(), expression2(), expression3() {}
+            ternaryOp(TokenDef::tokenKey op, syntaxNode e1, syntaxNode e2, syntaxNode e3) 
+                : op(op), expression1(e1), expression2(e2), expression3(e3) {}
+            ternaryOp(ternaryOp&& other) noexcept : op(other.op),
+                expression1(std::move(other.expression1)),
+                expression2(std::move(other.expression2)),
+                expression3(std::move(other.expression3)) {}
+
+            syntaxNode& get_expression1() {
+                return expression1;
+            }
+
+            syntaxNode& get_expression2() {
+                return expression2;
+            }
+
+            syntaxNode& get_expression3() {
+                return expression3;
+            }
+
+            TokenDef::tokenKey get_op() {
+                return op;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option) const override {
+                switch (option) {
+                    case DebugUtils::Literal:
+                        return display_token({op}, DebugUtils::Literal);
+                    default:
+                        return "<ternary operator>";
+                }
+            }
+    };
+
+//  Struct for an assignment syntaxNode.
+    struct assignOp : Data {
+        private:
+            std::string variable;
+            syntaxNode expression;
+
+        public:
+            assignOp() : variable(""), expression() {}
+            assignOp(const std::string& v, const syntaxNode& e) : variable(v), expression(e) {}
+            assignOp(assignOp&& other) : variable(std::move(other.variable)), 
+                expression(std::move(other.expression)) {}
+        
+            std::string& get_variable() {
+                return variable;
+            }
+
+            syntaxNode& get_expression() {
+                return expression;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option = DebugUtils::Literal) const override {
+                return "<assignment>";
+            }
+    };
+
+//  Struct for a reassignment syntaxNode.
+    struct reassignOp : Data {
+        private:
+            std::string variable;
+            syntaxNode expression;
+            bool implicit;
+
+        public:
+            reassignOp() : variable(""), expression(), implicit(false) {}
+            reassignOp(std::string v, syntaxNode e, bool i) : variable(v), expression(e), implicit(i) {}
+            reassignOp(reassignOp&& other) : variable(std::move(other.variable)), 
+                expression(std::move(other.expression)), implicit(other.implicit) {}
+
+            std::string& get_variable() {
+                return variable;
+            }
+
+            syntaxNode& get_expression() {
+                return expression;
+            }
+
+            bool get_implicit() {
+                return implicit;
+            }
+
+            std::string disp(const DebugUtils::tokenDispOption option = DebugUtils::Literal) const override {
+                return implicit ? "<implicit reassignment>" : "<reassignment>";
+            }
+    };
+}
 
 #endif

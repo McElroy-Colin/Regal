@@ -43,11 +43,11 @@ namespace {
 //      message: the error message to display (input)
 //      suffix_length: length of the suffix on line numbers in the environment (input)
 //          (e.g. '1>  let x = 4', ">  " is the suffix)
-    void _display_error(const String& line, const String& message, const int line_pos, const int suffix_length) {
+    void _display_error(const string& line, const string& message, const int line_pos, const int suffix_length) {
         _clear_next_rows(4);
         _move_cursor(line_pos - 1, suffix_length + 1);
-        std::cout << "\n\n" << String(suffix_length + 1, ' ') << "\"" << line << "\"";
-        std::cout << "\n\033[31m" << String(suffix_length + 1, ' ') << message << "\033[0m";
+        std::cout << "\n\n" << string(suffix_length + 1, ' ') << "\"" << line << "\"";
+        std::cout << "\n\033[31m" << string(suffix_length + 1, ' ') << message << "\033[0m";
         _move_cursor(line_pos - 1, suffix_length + 1);
         _clear_next_rows(1);
     }
@@ -58,7 +58,7 @@ namespace {
 //      display_msg: UI message to display at the top of the environment (input)
 //      linenum_suffix: text after the line number but before code (input)
 //          (e.g. '1>  let x = 4', ">  " is the linenum_suffix)
-void generate_playground(const String& display_msg, const String& linenum_suffix) {
+void generate_playground(const string& display_msg, const string& linenum_suffix) {
 //  Display the UI message.
     int ui_lines = 1;
 
@@ -72,8 +72,8 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
 
 
 //  Initialize variables for text environment loop.
-    String curr_line;
-    std::map<String, Action> stack;
+    string curr_line;
+    std::map<string, syntaxNode> stack;
 
     int line_size;
     int line_number = 1;
@@ -85,8 +85,8 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
 
 //  Loop to generate a live text environment.
     while (true) {
-        std::list<Token> tokens;
-        Action code;
+        std::list<token> tokens;
+        syntaxNode code;
 
 //      Clear current line and read the next input.
         _move_cursor(line_pos, 1);
@@ -115,10 +115,10 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
 
 //      The print function is currently hard-coded in.
         if ((curr_line.substr(0, 6) == "print(") && (curr_line[line_size - 1] == ')')) {
-            String var = curr_line.substr(6, line_size - 7);
+            string var = curr_line.substr(6, line_size - 7);
             auto it = stack.find(var);
             if (it == stack.end()) {
-                String error_msg = "variable \'" + var + "\' not initialized";
+                string error_msg = "variable \'" + var + "\' not initialized";
                 _display_error(curr_line, error_msg, line_pos, suffix_length);
 
                 line_number -= 1;
@@ -128,7 +128,7 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
             } else {
                 _clear_next_rows(4);
                 _move_cursor(line_pos, 0);
-                std::cout << String(suffix_length + 1, ' ');
+                std::cout << string(suffix_length + 1, ' ');
                 print(stack[var], "\033[32m");
                 
                 line_pos += 1;
@@ -152,7 +152,7 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
                 _clear_next_rows(4);
             }
             catch (const std::exception& e) {
-                String error_msg = e.what();
+                string error_msg = e.what();
                 _display_error(curr_line, error_msg, line_pos, suffix_length);
 
                 line_number -= 1;
@@ -170,7 +170,7 @@ void generate_playground(const String& display_msg, const String& linenum_suffix
 // Creates simple text environment to assign and print variables.
 int main() {
 //  Environment parameters are malleable.
-    const String pground_display_msg = 
+    const string pground_display_msg = 
         "\033[2J\033[1;1H\nRegal Playground V0.1:\n\n"
 
         "  i) type 'done' to quit\n"
@@ -178,7 +178,7 @@ int main() {
 
         "Enter code below line by line:\n\n";
 
-    const String linenum_suffix = ">  ";
+    const string linenum_suffix = ">  ";
 
 //  With this configuration, a line will look like:
 //      1>  [code]

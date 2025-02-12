@@ -33,29 +33,29 @@ namespace {
 
 // TODO: convert it to a switch statement for optimization
 
-// Optimize a given action down to its necessary runtime components. 
-// Update the given action to a presumably smaller tree structure. 
-// Return true if the action was optimized, meaning the given action was not a low-level value.
-//      action: action to be optimized (input/output)
+// Optimize a given code_tree down to its necessary runtime components. 
+// Update the given code_tree to a presumably smaller tree structure. 
+// Return true if the code_tree was optimized, meaning the given code_tree was not a low-level value.
+//      code_tree: code_tree to be optimized (input/output)
 //      var_stack: stack containing initialized variables (input)
-bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
-    if (std::holds_alternative<std::shared_ptr<CodeBlock>>(action)) { // CodeBlock
-        std::shared_ptr<CodeBlock> code_block = std::move(std::get<std::shared_ptr<CodeBlock>>(action));
+bool optimize_action(syntaxNode& code_tree, std::map<string, syntaxNode>& var_stack) {
+    if (std::holds_alternative<std::shared_ptr<codeBlock>>(code_tree)) { // codeBlock
+        std::shared_ptr<codeBlock> code_block = std::move(std::get<std::shared_ptr<codeBlock>>(code_tree));
 
         optimize_action(code_block->get_operation(), var_stack);
         optimize_action(code_block->get_remainder(), var_stack);
 
-        action = std::move(code_block);
+        code_tree = std::move(code_block);
 
         return false;
 
-    } else if (std::holds_alternative<std::shared_ptr<Integer>>(action)) { // Integer
+    } else if (std::holds_alternative<std::shared_ptr<intContainer>>(code_tree)) { // intContainer
         return false;
-    } else if (std::holds_alternative<std::shared_ptr<Boolean>>(action)) { // Boolean
+    } else if (std::holds_alternative<std::shared_ptr<boolContainer>>(code_tree)) { // boolContainer
         return false;
-    } else if (std::holds_alternative<std::shared_ptr<Variable>>(action)) { // Variable
-        std::shared_ptr<Variable> var_action = std::move(std::get<std::shared_ptr<Variable>>(action));
-        const String& variable = var_action->get_variable();
+    } else if (std::holds_alternative<std::shared_ptr<varContainer>>(code_tree)) { // varContainer
+        std::shared_ptr<varContainer> var_action = std::move(std::get<std::shared_ptr<varContainer>>(code_tree));
+        const string& variable = var_action->get_variable();
 
 //      Locate the given variable in the stack.
         auto iter = var_stack.find(variable);
@@ -64,13 +64,13 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
             throw VariableNotInitializedError(variable);
         }
 
-//      Update action to the variable's stored value.
-        action = iter->second;
+//      Update code_tree to the variable's stored value.
+        code_tree = iter->second;
 
         return true;
 
-    } else if (std::holds_alternative<std::shared_ptr<UnaryOperator>>(action)) { // UnaryOperator
-        std::shared_ptr<UnaryOperator> unary_op = std::move(std::get<std::shared_ptr<UnaryOperator>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<unaryOp>>(code_tree)) { // unaryOp
+        std::shared_ptr<unaryOp> unary_op = std::move(std::get<std::shared_ptr<unaryOp>>(code_tree));
         
 //      Optimize the operator's expression.
         optimize_action(unary_op->get_expression(), var_stack);
@@ -78,36 +78,36 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         switch (unary_op->get_op()) {
             case NotW:
             case Not: {
-                if (!std::holds_alternative<std::shared_ptr<Boolean>>(unary_op->get_expression())) { // Boolean
+                if (!std::holds_alternative<std::shared_ptr<boolContainer>>(unary_op->get_expression())) { // boolContainer
                     throw InavlidOperatorError(unary_op->get_expression(), Not);
                 }
 
-                std::shared_ptr<Boolean> bool_expr = std::move(std::get<std::shared_ptr<Boolean>>(unary_op->get_expression()));
-                action = std::make_shared<Boolean>(!bool_expr->get_boolean());
+                std::shared_ptr<boolContainer> bool_expr = std::move(std::get<std::shared_ptr<boolContainer>>(unary_op->get_expression()));
+                code_tree = std::make_shared<boolContainer>(!bool_expr->get_boolean());
                 return true;
             }
             default:
                 throw InavlidOperatorError(unary_op->get_expression(), unary_op->get_op());
         }
 
-    } else if (std::holds_alternative<std::shared_ptr<BinaryOperator>>(action)) { // BinaryOperator
-        std::shared_ptr<BinaryOperator> binary_op = std::move(std::get<std::shared_ptr<BinaryOperator>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<binaryOp>>(code_tree)) { // binaryOp
+        std::shared_ptr<binaryOp> binary_op = std::move(std::get<std::shared_ptr<binaryOp>>(code_tree));
 
 //      Optimize each side of the operator.
         optimize_action(binary_op->get_expression1(), var_stack);
         optimize_action(binary_op->get_expression2(), var_stack);
 
-//      For each operator, check for a type mismatch then perform the operation and assign it to the output action variable.
+//      For each operator, check for a type mismatch then perform the operation and assign it to the output code_tree variable.
         switch (binary_op->get_op()) {
             case Plus:
                 if (type_mismatch(binary_op->get_expression1(), binary_op->get_expression2())) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Integer>(int1->get_number() + int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<intContainer>(int1->get_number() + int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -118,10 +118,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Integer>(int1->get_number() - int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<intContainer>(int1->get_number() - int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -132,10 +132,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Integer>(int1->get_number() * int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<intContainer>(int1->get_number() * int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -146,14 +146,14 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
 
                     if (int2->get_number() == 0) {
                         throw DivisionByZeroError();
                     }
-                    action = std::make_shared<Integer>(int1->get_number() * int2->get_number());
+                    code_tree = std::make_shared<intContainer>(int1->get_number() * int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -164,10 +164,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Integer>(int_exp(int1->get_number(), int2->get_number()));
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<intContainer>(int_exp(int1->get_number(), int2->get_number()));
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -178,10 +178,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(int1->get_number() > int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(int1->get_number() > int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -192,10 +192,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(int1->get_number() < int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(int1->get_number() < int2->get_number());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -207,10 +207,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression1()));
-                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(bool1->get_boolean() && bool2->get_boolean());
+                if (std::holds_alternative<std::shared_ptr<boolContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<boolContainer> bool1 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<boolContainer> bool2 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(bool1->get_boolean() && bool2->get_boolean());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -222,10 +222,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression1()));
-                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(bool1->get_boolean() || bool2->get_boolean());
+                if (std::holds_alternative<std::shared_ptr<boolContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<boolContainer> bool1 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<boolContainer> bool2 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(bool1->get_boolean() || bool2->get_boolean());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -237,10 +237,10 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression1()));
-                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(bool1->get_boolean() ^ bool2->get_boolean());
+                if (std::holds_alternative<std::shared_ptr<boolContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<boolContainer> bool1 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<boolContainer> bool2 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(bool1->get_boolean() ^ bool2->get_boolean());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -252,15 +252,15 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
                     throw TypeMismatchError(binary_op->get_op());
                 }
 
-                if (std::holds_alternative<std::shared_ptr<Integer>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Integer> int1 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression1()));
-                    std::shared_ptr<Integer> int2 = std::move(std::get<std::shared_ptr<Integer>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(int1->get_number() == int2->get_number());
+                if (std::holds_alternative<std::shared_ptr<intContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<intContainer> int1 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<intContainer> int2 = std::move(std::get<std::shared_ptr<intContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(int1->get_number() == int2->get_number());
 
-                } else if (std::holds_alternative<std::shared_ptr<Boolean>>(binary_op->get_expression1())) {
-                    std::shared_ptr<Boolean> bool1 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression1()));
-                    std::shared_ptr<Boolean> bool2 = std::move(std::get<std::shared_ptr<Boolean>>(binary_op->get_expression2()));
-                    action = std::make_shared<Boolean>(bool1->get_boolean() == bool2->get_boolean());
+                } else if (std::holds_alternative<std::shared_ptr<boolContainer>>(binary_op->get_expression1())) {
+                    std::shared_ptr<boolContainer> bool1 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression1()));
+                    std::shared_ptr<boolContainer> bool2 = std::move(std::get<std::shared_ptr<boolContainer>>(binary_op->get_expression2()));
+                    code_tree = std::make_shared<boolContainer>(bool1->get_boolean() == bool2->get_boolean());
                 } else {
                     throw InavlidOperatorError(binary_op->get_expression1(), binary_op->get_op());
                 }
@@ -268,8 +268,8 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
             default:
                 throw FatalError("binary operator \'" + binary_op->disp(Literal) + "\' not recognized");
         }
-    } else if (std::holds_alternative<std::shared_ptr<TernaryOperator>>(action)) { // TernaryOperator
-        std::shared_ptr<TernaryOperator> ternary_op = std::move(std::get<std::shared_ptr<TernaryOperator>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<ternaryOp>>(code_tree)) { // ternaryOp
+        std::shared_ptr<ternaryOp> ternary_op = std::move(std::get<std::shared_ptr<ternaryOp>>(code_tree));
 
         optimize_action(ternary_op->get_expression1(), var_stack);
          optimize_action(ternary_op->get_expression2(), var_stack);
@@ -277,16 +277,16 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
         switch (ternary_op->get_op()) {
             case If: {
-                if (!std::holds_alternative<std::shared_ptr<Boolean>>(ternary_op->get_expression2())) {
+                if (!std::holds_alternative<std::shared_ptr<boolContainer>>(ternary_op->get_expression2())) {
                     throw TypeMismatchError(ternary_op->get_expression2());
                 }
 
-                std::shared_ptr<Boolean> bool_condition = std::move(std::get<std::shared_ptr<Boolean>>(ternary_op->get_expression2()));
+                std::shared_ptr<boolContainer> bool_condition = std::move(std::get<std::shared_ptr<boolContainer>>(ternary_op->get_expression2()));
 
                 if (bool_condition->get_boolean()) {
-                    action = std::move(ternary_op->get_expression1());
+                    code_tree = std::move(ternary_op->get_expression1());
                 } else {
-                    action = std::move(ternary_op->get_expression3());
+                    code_tree = std::move(ternary_op->get_expression3());
                 }
 
                 return true;
@@ -296,8 +296,8 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
         }
 
     // Assigning/reasigning a variable only optimizes the expression being assigned, no assignment is made.
-    } else if (std::holds_alternative<std::shared_ptr<Assign>>(action)) { // Assign
-        std::shared_ptr<Assign> var_action = std::move(std::get<std::shared_ptr<Assign>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<assignOp>>(code_tree)) { // assignOp
+        std::shared_ptr<assignOp> var_action = std::move(std::get<std::shared_ptr<assignOp>>(code_tree));
         optimize_action(var_action->get_expression(), var_stack);
 
 //      Check if the given variable has already been initialized.
@@ -308,11 +308,11 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
         var_stack[var_action->get_variable()] = std::move(var_action->get_expression());
 
-        action = std::move(var_action);
+        code_tree = std::move(var_action);
             
         return false;
-    } else if (std::holds_alternative<std::shared_ptr<Reassign>>(action)) { // Reassign
-        std::shared_ptr<Reassign> var_action = std::move(std::get<std::shared_ptr<Reassign>>(action));
+    } else if (std::holds_alternative<std::shared_ptr<reassignOp>>(code_tree)) { // reassignOp
+        std::shared_ptr<reassignOp> var_action = std::move(std::get<std::shared_ptr<reassignOp>>(code_tree));
 
 //      Locate the given variable in the stack.
         auto iter = var_stack.find(var_action->get_variable());
@@ -331,7 +331,7 @@ bool optimize_action(Action& action, std::map<String, Action>& var_stack) {
 
         var_stack[var_action->get_variable()] = std::move(var_action->get_expression());
 
-        action = std::move(var_action);
+        code_tree = std::move(var_action);
             
         return false;
     }

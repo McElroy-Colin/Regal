@@ -3,6 +3,8 @@
 #include "../../../include/inc_langdef/langdef.hpp"
 #include "../../../include/inc_debug/error_handling.hpp"
 
+using std::string, std::pair, std::list, std::vector, std::make_pair, std::get;
+using namespace TokenDef;
 
 constexpr int TAB_WIDTH = 4;
 
@@ -17,7 +19,7 @@ namespace {
 //  Return the index succeeding the final whitespace character.
 //      line: the line of code (input)
 //      string_index: the first index to match with whitespace (input)
-    int _match_whitespace(const String& line, const int string_index) {
+    int _match_whitespace(const string& line, const int string_index) {
         int whitespace_index;
 
         for (whitespace_index = string_index; is_whitespace(line[whitespace_index]); whitespace_index++);
@@ -28,7 +30,7 @@ namespace {
 //  Return a pair with the index succeeding the final whitespace character and the amount of matched whitespace on the final line.
 //      line: the line of code (input)
 //      string_index: the first index to match with whitespace (input)
-    std::pair<int, int> _query_whitespace(const String& line, const int string_index) {
+    pair<int, int> _query_whitespace(const string& line, const int string_index) {
         int whitespace_index;
         int whitespace_count = 0;
 
@@ -43,7 +45,7 @@ namespace {
             }
         }
 
-        return std::make_pair(whitespace_index, whitespace_count);
+        return make_pair(whitespace_index, whitespace_count);
     }
 
 //  Match sequential integer characters in the given string starting at the given index.
@@ -52,7 +54,7 @@ namespace {
 //      line: the line of code (input)
 //      string_index: the first index to match with integers (input)
 //      integer_token: the index succeeding the matched integer and the integer value (output)
-    void _match_integer(String& line, const int string_index, std::vector<int>& integer_token) {
+    void _match_integer(string& line, const int string_index, vector<int>& integer_token) {
         int integer_index, integer_value;
 
         for (integer_index = string_index; is_integer(line[integer_index]); integer_index++);
@@ -68,8 +70,8 @@ namespace {
 //      line: the line of code (input)
 //      string_index: the first index to match with a label (input)
 //      label_token: the index succeeding the matched label and the label string (output)
-    void _match_label(String& line, const int string_index, Token& label_token) {
-        String label;
+    void _match_label(string& line, const int string_index, token& label_token) {
+        string label;
         int label_index;
 
         for (label_index = string_index; is_label(line[label_index]); label_index++);
@@ -86,7 +88,7 @@ namespace {
 //      string_index: the first index to match with a token (input)
 //      end_without_label: true if the matched token can be succeeded with anything that is not a label character, 
 //                         false if the token must be succeeded by whitespace (input)
-    int _match_token(const String& line, const String& target, const int string_index, const bool end_without_label) {
+    int _match_token(const string& line, const string& target, const int string_index, const bool end_without_label) {
         int word_index;
 
         for (word_index = string_index; line[word_index] && (line[word_index] == target[word_index - string_index]); word_index++);\
@@ -102,24 +104,24 @@ namespace {
 }
 
 // Lex a string into a list of Regal syntax tokens.
-// Stores a list of arrays, with each array containing the token enum value and any additional necessary data.
+// Stores a list of vectors, with each vector containing the token enum value and any additional necessary data.
 //      line: the line of code to lex (input)
 //      token_list: list of tokens from the given line (output)
-void lex_string(String& line, std::list<Token>& token_list) {
+void lex_string(string& line, list<token>& token_list) {
     int matched_index, line_length;
 
 //  Match any whitespace preceding the first line of code.
-    std::pair<int, int> position_count = _query_whitespace(line, 0);
+    pair<int, int> position_count = _query_whitespace(line, 0);
     int string_index = position_count.first;
     token_list.push_back({Newline, position_count.second});
 
     line_length = line.size();
     while (string_index < line_length) {
         if (is_integer(line[string_index])) {
-            std::vector<int> position_integer; 
+            vector<int> position_integer; 
             _match_integer(line, string_index, position_integer);
 //          Include the integer value in the token.
-            Token token = { Int, position_integer[1] };
+            token token = { Int, position_integer[1] };
 
             token_list.push_back(token);
             string_index = position_integer[0];
@@ -171,13 +173,13 @@ void lex_string(String& line, std::list<Token>& token_list) {
 
 //      Assume this label starts with a letter or '_' since the same index was checked for an integer already.
         }  else if (is_label(line[string_index])) {
-            Token position_label, token;
+            token position_label, token;
             _match_label(line, string_index, position_label);
 //          Include the variable label in the token.
             token = { Var, position_label[1] };
 
             token_list.push_back(token);
-            string_index = std::get<int>(position_label[0]);
+            string_index = get<int>(position_label[0]);
         
         } else if (_match_token(line, "==", string_index, false) > string_index) {
             token_list.push_back({ Equals });

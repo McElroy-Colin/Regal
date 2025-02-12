@@ -5,9 +5,9 @@
 #include "../../../include/inc_debug/error_handling.hpp"
 
 
-// Execute the given action on the given stack.
-//      action: action to execute (input)
+// Execute the given code_tree on the given stack.
+//      code_tree: code_tree to execute (input)
 //      var_stack: stack of variables to execute on (input)
-void execute_action(Action& action, std::map<String, Action>& var_stack) {
+void execute_action(syntaxNode& code_tree, std::map<string, syntaxNode>& var_stack) {
     return;
 }
