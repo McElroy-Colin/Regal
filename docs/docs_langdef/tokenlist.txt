@@ -61,8 +61,16 @@ Operator tokens:
 
     '==' / 'is': Compares two values for equality.
 
+    '<=': Compares 2 values, returning true if the left value is "smaller" or equal to the right value.
+
+    '>=': Compares 2 values, returning true if the left value is "larger" or equal to the right value.
+
 
 Special tokens:
+
+    '#': Denotes a single-line comment.
+
+    '##': Denotes a multi-line comment. A multi-line comment closes with another '##'.
 
     '(': Denotes expression groupings to assign an order of operations to expressions.
 

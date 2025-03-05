@@ -1,20 +1,11 @@
-# .gitignore file for C++
+# .gitignore file for Regal
 
-
-# WIP code
-new_pground/
-personal_folder/
-boned_copy/
-Makefile
+# Machine-specific files
 build/
 
 # System files
 *.vscode
 *.json
-
-# python structures
-tempCodeRunnerFile.py
-playground_env/
 
 # Prerequisites
 *.d

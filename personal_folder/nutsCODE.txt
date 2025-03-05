@@ -1,0 +1,10 @@
+
+
+
+let x = 7
+
+if true
+  let y = 5
+
+else
+    x = 87

@@ -10,40 +10,63 @@ Context-Free Grammar that dictates order of syntax in Regal
     - The '|' symbol represents an OR branch.
 
 
-File -> Code
 
-Code -> LineInit Code | LineInit 
+SCOPE ANALYSIS:
 
-LineInit ->  '\n<matched indent>' IfBlock | '\n<matched indent>' CodeBlock
+    File -> '\n' CodeScope
 
-IfBlock -> 'if' OrExpr '\n<new indent>' LineInit ElseBlock
-         | 'if' OrExpr '\n<new indent>' LineInit
+    CodeScope -> InlineOperation BlockIndicator
+            | IfBlock BlockIndicator
 
-ElseBlock -> '\n<matched indent>' 'else' '\n<new indent>' LineInit
+    BlockIndicator -> '\n<matched indent>' CodeScope | '\n<unmatched indent>'
+        <matched indent> is as indented or more indented than the current scope
+        <unmatched indent> is less indented than the curent scope, indicating the end of a scope
 
-CodeBlock -> SingleOperation '\n<matched indent>' LineInit | SingleOperation '\n<unmatched indent>'
-    <whitespace> is any number of whitespace characters
 
-SingleOperation -> Assignment
+MULTI-LINE OPERATIONS:
 
-Assignment -> ExplicitAssignment | ImplicitAssignment
+    IfBlock -> 'if' Expression '\n<new indent>' CodeScope ElseBlock
+            | 'if' Expression '\n<new indent>' CodeScope
+        <new_indent> is a greater indend than the current scope, indicating a nested scope
 
-ExplicitAssignment -> LetStatement | NowStatement
+    ElseBlock -> '\n<exact indent>' 'else' IfBlock
+            | '\n<exact indent>' 'else' '\n<new indent>' CodeScope
+        <exact indent> is precisely the same indentation as the current scope
+        <new_indent> is a greater indend than the current scope, indicating a nested scope
 
-        LetStatement -> 'let' '<var>' '=' InlineIfStatement
-            <var> is a custom variable name
 
-        NowStatement -> 'now' '<var>' '=' InlineIfStatement
-            <var> is a custom variable name
+SINGLE-LINE INITIALIZER:
 
-ImplicitAssignment -> '<var>' '=' InlineIfStatement
-        <var> is an already defined variable name
+    InlineOperation -> Assignment
 
-InlineIfStatement -> Expression 'if' OrExpr 'else' InlineIfStatement | Expression
 
-Expression -> OrExpr 
+VARIABLE ASSIGNMENT:
+
+    Assignment -> ExplicitAssignment | ImplicitAssignment
+
+    ExplicitAssignment -> LetStatement | NowStatement
+
+            LetStatement -> 'let' '<var>' '=' Expression
+                <var> is a custom variable name
+
+            NowStatement -> 'now' '<var>' '=' Expression
+                <var> is an already defined variable name
+
+    ImplicitAssignment -> '<var>' '=' Expression
+            <var> is an already defined variable name
+
+
+EXPRESSIONS:
+
+    Expression -> InlineIfExpression
+
+    InlineIfExpression -> ComparisonExpr 'if' ComparisonExpr 'else' Expression | ComparisonExpr
+
 
 BOOLEAN ARITHMETIC:
+
+    ComparisonExpr -> OrExpr '<comp_op>' ComparisonExpr | OrExpr
+        <comp_op> is '==' or 'is'
 
     OrExpr -> ExclusiveOrExpr '<or_op>' OrExpr | ExclusiveOrExpr
         <or_op> is '|' or 'or'
@@ -54,11 +77,11 @@ BOOLEAN ARITHMETIC:
     AndExpr -> NotExpr '<and_op>' AndExpr | NotExpr
         <and_op> is '&' or 'and'
 
-    NotExpr -> '<not_op>' ComparisonExpr | ComparisonExpr
+    NotExpr -> '<not_op>' NotExpr | NumericalCompExpr
         <not_op> is '!' or 'not'
     
-    ComparisonExpr -> AdditiveExpr '<comp_op>' ComparisonExpr | AdditiveExpr
-        <comp_op> is '>', '<', '==', or 'is'
+    NumericalCompExpr -> AdditiveExpr '<numeric_comp_op>' NumericalCompExpr | AdditiveExpr
+        <numeric_comp_op> is '>', '<', '<=', or '>='
 
 
 NUMERICAL ARITHMETIC:
@@ -76,10 +99,10 @@ LOW-LEVEL VALUES:
 
     MinusIdentifierExpr -> PrimitiveExpr | '-'PrimitiveExpr
 
-        PrimitiveExpr -> '<var>' | NumberExpr | BooleanExpr | '('InlineIfStatement')'
-            <var> is a custom variable name
+    PrimitiveExpr -> '<var>' | NumberExpr | BooleanExpr | '('Expression')'
+        <var> is a custom variable name
 
-            NumberExpr -> '<integer>'
-                <integer> is any integer
+        NumberExpr -> '<integer>'
+            <integer> is any integer
 
-            BooleanExpr -> 'true' | 'false'
+        BooleanExpr -> 'true' | 'false'

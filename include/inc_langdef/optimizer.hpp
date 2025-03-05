@@ -1,38 +1,49 @@
 // Header file containing code used in optimization and execution of AST trees.
 
-#include <map>
-#include "langdef.hpp"
-
 #ifndef OPTIMIZER_HPP
 #define OPTIMIZER_HPP
 
-// TODO: this is bad, dont want to manually update this when I add more actions
-std::vector<size_t> number_types = {
-    0 /* intContainer */
-};
-
-// Namespace for type checking data and utilities.
-namespace TypingUtils {
-//  Return true if the given nodes are of different types.
-//      node1: first code tree to compare (input)
-//      node2: second code tree to compare (input)
-    bool type_mismatch(const syntaxNode& node1, const syntaxNode& node2) {
-        return node1.index() != node2.index();
-    }
+#include <list>
+#include <map>
+#include <vector>
+#include <tuple>
+#include "inc_debug/error_handling.hpp"
+#include "inc_debug/compiler_debug.hpp"
 
 
-//  Return true if the given code tree is non of the given types.
-//      code_tree: code tree to compare (input)
-//      types: types to check the code tree for (input)
-    bool incompatible_type(const syntaxNode& code_tree, const std::vector<size_t>& types) {
-        for (int i = 0; i < types.size(); i++) {
-            if (types[i] == code_tree.index()) {
-                return false;
-            }
-        }
-        return true;
-    }
+// Namespace for structures involving interpreted data storage.
+namespace DataStorage {
+    struct variableInfo {
+        TypingUtils::dataType type;
+        std::shared_ptr<CodeTree::valueData> value;
+        bool optimize_value;
+    };
+
+//  Stack structure to store variables in distinct scopes.
+    class stack {
+        public:
+            std::map<std::string, variableInfo> locals;
+            std::vector<std::shared_ptr<stack>> inner_scopes;
+            std::shared_ptr<stack> parent_scope;
+
+            stack();
+            stack(std::shared_ptr<stack> parent);
+    };
 }
 
+// Optimize and typecheck a given code tree down to its necessary runtime components, including variable assignment. 
+// Update the given code tree to a presumably smaller tree structure.
+// Return true if the code tree was optimized, meaning the given code tree was known at before runtime.
+//      data_node: code tree to be optimized (input/output)
+//      scope_stack: stack containing initialized variables (input/output)
+//      update_stacks: true if variables should be updated in the current scope and parent scopes (input)
+bool optimize_typecheck_data_node(std::shared_ptr<CodeTree::dataNode>& data_node, std::shared_ptr<DataStorage::stack>& scope_stack, const bool update_stacks);
+
+// Optimize and typecheck a given value tree down to its necessary runtime components, including variable assignment. 
+// Update the given value tree to a presumably smaller tree structure.
+// Return a pair that contains a boolean representing whether the given tree was optimized and a dataType representing the type of the given value tree.
+//      value_data: code tree to be optimized (input/output)
+//      scope_stack: stack containing initialized variables (input/output)
+std::pair<bool, TypingUtils::dataType> optimize_typecheck_value_data(std::shared_ptr<CodeTree::valueData>& value_data, std::shared_ptr<DataStorage::stack>& scope_stack);
 
 #endif
