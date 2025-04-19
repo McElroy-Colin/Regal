@@ -143,7 +143,7 @@ class Playground:
 #       Retrieve tect input from the text region.
         text_input = self.text_region.get("1.0", tk.END)
 
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__ )), "..","bin")
+        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__ )), "..", "bin")
         exe_path = os.path.join(base_path, "interpreter.exe")
 
 #       Capture all output from the interpeter.
