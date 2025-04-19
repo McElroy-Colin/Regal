@@ -1,27 +1,44 @@
-// File containing standard I/O functions for Regal.
+/*
+
+Standard I/O function declarations.
+
+*/
 
 #ifndef STDIO_HPP
 #define STDIO_HPP
 
 #include <iostream>
 #include <type_traits>
-#include "inc_debug/compiler_debug.hpp"
-#include "inc_debug/error_handling.hpp"
 
+#include "inc_internal/display_utils.hpp"
+#include "inc_internal/error_handling.hpp"
 
-// Converts a piece of irreducible data to a string and stores it.
-//      data: data to conver to string (input)
-//      converted: string representation of data (output)
-void to_string(const std::shared_ptr<CodeTree::irreducibleData>& data, std::string& converted);
+/*
+Convert a piece of irredicible data to a string.
 
-// Return the display string for a piece of irreducible data.
-//      data: data to conver to string (input)
-std::string to_string(const std::shared_ptr<CodeTree::irreducibleData>& data);
+Parameters:
+    data: data to convert to a string (input)
+
+Return the display string for the piece of data.
+*/
+inline const std::string to_string(const CodeTree::irreducibleData* data) noexcept {
+    return data->disp();
+}
 
 // Prints a piece of irreducible data with optional prefix and suffix.
 //      data_node: data to print (input)
 //      prefix: string to prepend to the data (default empty) (input)
 //      suffix: string to append to the data (default "\033[0m") (input)
-void print(const std::shared_ptr<CodeTree::irreducibleData>& data_node, std::string prefix = "", std::string suffix = "\033[0m");
+
+/*
+Print a display string for a piece of irreducible data to standard output.
+
+Parameters:
+    data: piece of data to print (input)
+    prefix: string to prepend to the display string (default "") (input)
+    suffix: string to append to the display string (default "\033[0m") (input)
+            the default string turns future printed text white automatically
+*/
+void print(const CodeTree::irreducibleData* const data, const std::string prefix = "", const std::string suffix = "\033[0m") noexcept;
 
 #endif

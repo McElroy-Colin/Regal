@@ -1,8 +1,8 @@
 import tkinter as tk
 import subprocess
-import sys
 import os
 
+INTERPRET_DELAY_TIME = 50
 
 class Playground:
     """
@@ -13,7 +13,6 @@ class Playground:
         """
         Initialize a playground application instance.
             display_package: a disiplayPackage object to theme the playground visually (input)
-            debug: boolean, True if the playground should run a debug version of the interpreter on given code (input)
         """
 
 #       Initialize the main window and retrieve window data.
@@ -94,7 +93,7 @@ class Playground:
 #       Ensure text is interpreted if no key is pressed for 500 ms.
         self.text_region.bind("<KeyRelease>", lambda event: (
             self.update_line_nums(event), 
-            self.delay_event(500, self.text_region, self.interpret_text, event)
+            self.delay_event(INTERPRET_DELAY_TIME, self.text_region, self.interpret_text, event)
         ))
 
         return
@@ -144,10 +143,11 @@ class Playground:
 #       Retrieve tect input from the text region.
         text_input = self.text_region.get("1.0", tk.END)
 
-#       Retrieve interpeter path.
-        args = ["build/release/bin/interpreter.exe"]
+        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__ )), "..","bin")
+        exe_path = os.path.join(base_path, "interpreter.exe")
+
 #       Capture all output from the interpeter.
-        output = subprocess.run(args, input=text_input, capture_output=True, text=True)
+        output = subprocess.run([exe_path], input=text_input, capture_output=True, text=True)
 
 #       If an error occurred, display the error message.
         if output.stderr:
@@ -156,12 +156,13 @@ class Playground:
         else:
             output_text = output.stdout
 #           Separate the stack output from the interpretation output using the delimeter "$$$".
-            index = output_text.find("$$$")
+            output_delimeter = "$$$"
+            index = output_text.find(output_delimeter)
 
 #           If both outputs were found, display them.
             if index != -1:
                 stack_str = output_text[:index]
-                time_str = output_text[index + 3:]
+                time_str = output_text[index + len(output_delimeter):]
                 
                 self.write_stack(stack_str)
                 self.write_execution_time(time_str)
