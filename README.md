@@ -1,6 +1,6 @@
 # Regal V0.6.1
 
-**Interpreter source code in progress.**
+**Hiatus while I take a compilers class! Interpreter source code in progress.**
 
 Regal is a work-in-progress non-functional programming language developed by **Colin McElroy**. Currently, the language is unfinished, with progress on the interpreter source code located in the `~/src` and `~/include` directories. Regal is intended to support features such as:
 
